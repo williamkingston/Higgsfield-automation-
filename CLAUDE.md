@@ -1,10 +1,10 @@
 # CLAUDE.md — Higgsfield Automation
 
-This file provides guidance for AI assistants (Claude Code and others) working in this repository.
+Guidance for AI assistants (Claude Code and others) working in this repository.
 
 ## Project Overview
 
-This repository automates workflows with the [Higgsfield AI](https://higgsfield.ai) platform — an AI-powered video generation and editing service. Typical use cases include:
+This repository automates workflows with the [Higgsfield AI](https://higgsfield.ai) platform — an AI-powered video generation and editing service. Target use cases:
 
 - Programmatic video generation via the Higgsfield API
 - Batch processing pipelines for creative assets
@@ -13,115 +13,99 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+**Greenfield — no source code yet.** The repo contains only this file. When adding the first code, choose a language/framework and update the sections below accordingly.
+
+## Project Structure
+
+```
+.
+├── CLAUDE.md            # This file — AI assistant guidance
+├── src/                 # Main source code (create when adding first module)
+├── tests/               # Test suite (mirror src/ layout)
+├── scripts/             # One-off or utility scripts
+└── docs/                # Additional documentation
+```
+
+Create `.env.example`, `README.md`, and build/config files as needed during initial setup.
 
 ## Development Setup
 
-Document the setup steps here once the project is initialised. Common patterns:
+No setup steps yet. When initialising the project, document the exact commands here. Example patterns:
 
 ```bash
-# Python projects
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt   # or: pip install -e ".[dev]"
+# Python
+python -m venv .venv && source .venv/bin/activate && pip install -e ".[dev]"
 
-# Node projects
+# Node/TypeScript
 npm install
 
-# Copy and fill in environment variables
-cp .env.example .env
+# Environment variables (always required)
+cp .env.example .env   # then fill in real values
 ```
 
 ## Environment Variables
 
-Add required variables to `.env.example` (never commit real secrets). Expected keys will include:
+Store secrets in `.env` locally (must be in `.gitignore`). Never commit credentials.
 
 | Variable | Description |
 |---|---|
-| `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
-| `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
+| `HIGGSFIELD_API_KEY` | Bearer token for Higgsfield API |
+| `HIGGSFIELD_API_BASE` | API base URL (default `https://api.higgsfield.ai`) |
 
-## Project Structure
-
-Update this section as directories are created:
-
-```
-.
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
-```
+Add new variables to `.env.example` with placeholder values whenever they are introduced.
 
 ## Key Conventions
 
 ### Code Style
 
-- Follow the language's idiomatic style (PEP 8 for Python, Prettier defaults for JS/TS).
+- Follow the language's idiomatic style (PEP 8 for Python, Prettier for JS/TS).
 - Keep functions small and single-purpose.
-- Avoid adding comments that describe *what* code does — only comment *why* when the reason is non-obvious.
-- No half-finished implementations; every committed function should be callable.
+- No comments that describe *what* — only comment *why* when non-obvious.
+- No half-finished implementations; every committed function must be callable.
 
-### API Interactions
+### Higgsfield API Integration
 
-- All Higgsfield API calls must go through a single client module (e.g., `src/client.py` or `src/api/client.ts`). Never scatter raw `requests`/`fetch` calls across the codebase.
-- Respect rate limits; implement exponential backoff on `429` responses.
-- Log API request IDs for traceability, never log API keys or full response bodies that may contain PII.
+- **Single client module:** All Higgsfield API calls go through one module (e.g. `src/client.py` or `src/api/client.ts`). Never scatter raw HTTP calls.
+- **Auth:** Bearer token via `Authorization: Bearer <HIGGSFIELD_API_KEY>`.
+- **Async jobs:** Video generation is asynchronous — poll the job status endpoint until `status` is `completed` or `failed`. Always check status before downloading assets.
+- **Rate limits:** Implement exponential backoff on `429` responses.
+- **Logging:** Log API request IDs for traceability. Never log API keys or response bodies that may contain PII.
+- **Job persistence:** Store job IDs so jobs survive process restarts.
 
 ### Error Handling
 
 - Validate at system boundaries (API responses, user input, file I/O).
-- Don't add defensive checks for conditions that genuinely cannot occur inside well-controlled internal code.
-- Prefer raising/throwing descriptive errors over silent fallbacks.
+- No defensive checks for impossible internal conditions.
+- Prefer descriptive errors over silent fallbacks.
 
 ### Secrets
 
 - Never commit credentials, API keys, or tokens.
-- Use `.env` locally and environment variables in CI/CD.
+- `.env` for local dev; environment variables in CI/CD.
 - `.env` must be in `.gitignore`.
 
 ## Running Tests
 
-Document test commands here once a test framework is chosen:
+No test framework chosen yet. When one is added, put the exact command here:
 
 ```bash
-# Python (pytest)
-pytest
-
-# JavaScript/TypeScript
-npm test
+# pytest / npm test / etc.
 ```
 
 ## CI / CD
 
-Document the CI pipeline here once configured. Common things to capture:
-
-- Which checks must pass before merge (lint, type check, tests)
-- How deployments are triggered
-- Branch protection rules
-
-## Working with the Higgsfield API
-
-Key things to know when implementing against Higgsfield:
-
-- Authentication uses a bearer token (`Authorization: Bearer <HIGGSFIELD_API_KEY>`).
-- Video generation jobs are asynchronous — poll the job status endpoint until `status` is `completed` or `failed`.
-- Always check `job.status` before downloading output assets.
-- Store job IDs persistently so jobs can be recovered after a process restart.
+Not yet configured. Document here once set up: required checks, deployment triggers, branch protection.
 
 ## Git Workflow
 
 - Develop on feature branches; open PRs against `main`.
-- Write clear, imperative commit messages: `Add retry logic for video polling`.
-- Keep commits atomic — one logical change per commit.
-- Do not force-push to `main` or shared branches.
+- Imperative commit messages: `Add retry logic for video polling`.
+- One logical change per commit.
+- No force-pushes to `main` or shared branches.
 
 ## Adding New Features
 
-1. Create a feature branch from `main`.
-2. Write tests alongside the implementation.
-3. Update this `CLAUDE.md` if the change introduces new conventions, directories, or environment variables.
-4. Open a PR and ensure CI passes before merging.
+1. Branch from `main`.
+2. Write tests alongside implementation.
+3. Update this `CLAUDE.md` if the change introduces new conventions, directories, or env vars.
+4. PR → CI green → merge.
