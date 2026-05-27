@@ -1,6 +1,6 @@
 # Social Media Manager — Wrich Velvyt
 
-Manage social media for **Wrich Velvyt**, a fashion brand. Draft posts, generate visuals, publish to LinkedIn, Instagram, Twitter, and Facebook via the Blotato API, and log everything.
+Manage social media for **Wrich Velvyt**, a fashion brand. Draft posts for LinkedIn, Instagram, Twitter, and Facebook, suggest visual concepts, and maintain a running log of published content.
 
 ## Brand Voice
 
@@ -88,70 +88,46 @@ Write a tailored post for each requested platform following the brand voice and 
 [draft]
 ```
 
-### 3. User Review
-Wait for the user to approve, request edits, or reject. Do NOT proceed to publishing until explicit approval.
+### 3. Visual Concept
+For each post, suggest a **visual concept** the user can create or source. Include:
+- **Scene description**: What the image/video should show
+- **Mood & color**: Dark backgrounds, bold white or metallic typography, moody cinematic lighting, high contrast
+- **Format**: Square (1080x1080) for Instagram/Facebook, landscape (1200x675) for Twitter/LinkedIn
+- **Style reference**: Streetwear editorial, lookbook aesthetic
 
-### 4. Generate Visuals
-After approval, generate a visual for each post using the Blotato visual creation script:
+Example visual concept:
+> Close-up shot of the Midnight Tracksuit on a dark textured background. Moody side-lighting with cool blue tones. Bold white text overlay: "MIDNIGHT". Cinematic grain. 1080x1080.
 
-```bash
-python3 /home/user/Higgsfield-automation-/src/create_visual.py \
-  --prompt "VISUAL_DESCRIPTION" \
-  --brand-instructions "Dark backgrounds, bold white or metallic typography, moody cinematic lighting, high contrast. Brand: Wrich Velvyt. Aesthetic: streetwear editorial."
-```
+### 4. User Review
+Wait for the user to approve, request edits, or reject. Do NOT proceed until explicit approval.
 
-Poll for completion:
-```bash
-python3 /home/user/Higgsfield-automation-/src/check_visual_status.py --creation-id CREATION_ID
-```
-
-The visual prompt should match the post content — describe what the image/video should show in detail. Always include brand aesthetic instructions.
-
-### 5. Publish
-Once visuals are ready, publish to each platform:
-
-```bash
-python3 /home/user/Higgsfield-automation-/src/publish_post.py \
-  --platform PLATFORM \
-  --text "POST_TEXT" \
-  --media-url "VISUAL_URL" \
-  --account-id ACCOUNT_ID
-```
-
-If account IDs are not known, fetch them first:
-```bash
-python3 /home/user/Higgsfield-automation-/src/list_accounts.py
-```
+### 5. User Publishes Manually
+The user copies the approved text and posts it themselves on each platform. After publishing, they provide the live URL(s).
 
 ### 6. Log the Post
-After each successful publish, log it:
+Once the user confirms publishing, log each post:
 
 ```bash
 python3 /home/user/Higgsfield-automation-/src/log_post.py \
   --platform PLATFORM \
   --text "POST_TEXT" \
-  --media-url "VISUAL_URL" \
-  --post-id "POST_SUBMISSION_ID" \
+  --live-url "LIVE_URL" \
   --status "published"
 ```
 
 The log is stored at `/home/user/Higgsfield-automation-/data/post-log.json`.
 
 ### 7. Report
-Show the user a summary: which platforms were posted to, links to check status, and confirm the log was updated.
+Show the user a summary: which platforms were posted to, the live URLs, and confirm the log was updated.
 
-## First-Time Setup
+## Optional: Blotato API Integration
 
-If the user hasn't configured Blotato yet (no `BLOTATO_API_KEY` in `.env`):
+If the user later sets up a Blotato account (paid), the skill can auto-publish and generate visuals. To enable:
 
-1. Direct them to create an account at https://www.blotato.com/
-2. Connect their social accounts (LinkedIn, Instagram, Twitter, Facebook) in Blotato settings
-3. Generate an API key at https://my.blotato.com/ under Settings > API Keys
-4. Create a `.env` file from `.env.example` and add the key:
-   ```
-   BLOTATO_API_KEY=your_key_here
-   ```
-5. Run `python3 /home/user/Higgsfield-automation-/src/list_accounts.py` to verify connected accounts
+1. Create an account at https://www.blotato.com/
+2. Connect social accounts and generate an API key
+3. Add `BLOTATO_API_KEY=your_key_here` to `.env`
+4. The scripts in `src/` support: `list_accounts.py`, `publish_post.py`, `create_visual.py`, `check_visual_status.py`
 
 ## Viewing Post History
 
