@@ -41,6 +41,7 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 | `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
 | `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
 | `BLOOM_API_KEY` | Bloom API key (prefix `bloom_sk_`) for authenticated requests |
+| `BLOOM_API_BASE` | Bloom API base URL (default: `https://api.bloom.ai`) |
 
 ## Project Structure
 
@@ -50,8 +51,11 @@ Update this section as directories are created:
 .
 ├── CLAUDE.md            # This file
 ├── .env.example         # Environment variable template
+├── requirements.txt     # Runtime dependencies
+├── requirements-dev.txt # Dev/test dependencies
 ├── README.md            # User-facing documentation
 ├── src/                 # Main source code
+│   └── bloom/           # Bloom API client (config, client, errors)
 ├── tests/               # Test suite
 ├── scripts/             # One-off or utility scripts
 └── docs/                # Additional documentation
