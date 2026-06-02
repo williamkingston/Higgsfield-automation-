@@ -40,6 +40,7 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 |---|---|
 | `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
 | `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
+| `BLOOM_API_KEY` | Bloom API key (prefix `bloom_sk_`) for authenticated requests |
 
 ## Project Structure
 

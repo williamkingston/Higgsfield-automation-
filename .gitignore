@@ -1,0 +1,25 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# HyperFrames skill backups
+.agents/skills/*.bak.*
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
