@@ -7,14 +7,23 @@ mostly-unattended loops. Full plan: [`docs/automation-plan.md`](docs/automation-
 The guiding rule: **build one proven loop, then clone the pattern.** Nothing
 publishes or moves money without a gate.
 
-## Status — Phase 0 (Foundation) shipped
+## Status
 
+**Phase 0 (Foundation) — shipped**
 - ✅ **Empire Ops** Airtable base is live (`applx48uo2056erUB`) with all six
   tables — see [`docs/empire-ops-base.md`](docs/empire-ops-base.md).
 - ✅ Read/write loop verified against the live base.
 - ✅ Guardrail tiers (§4) encoded in [`config/guardrails.yaml`](config/guardrails.yaml)
   and enforced by `src/empire_ops/guardrails.py` (tested).
 - ✅ Single Airtable client, env config, and a hello-world routine.
+
+**Phase 1 (Content engine) + Phase 3B (Money digest) — built**
+- ✅ Tested helpers: `content` (queue lifecycle), `approvals` (Tier-B → Needs
+  Approval), `digest` (money pulse → Money Digest Log), `notify` (Slack).
+- ✅ Routine playbooks: [`routines/nightly_content.md`](routines/nightly_content.md)
+  and [`routines/money_digest.md`](routines/money_digest.md).
+- ⏳ Live runs need credentials/connector re-auth (Higgsfield key; Shopify &
+  QuickBooks connectors were expired at build time). See `routines/README.md`.
 
 ## Layout
 
@@ -25,13 +34,20 @@ publishes or moves money without a gate.
 │   ├── automation-plan.md      # the staged roadmap
 │   └── empire-ops-base.md      # live base IDs + schema reference
 ├── routines/
-│   └── hello_world.py          # Phase 0: read a row, write back
+│   ├── hello_world.py          # Phase 0: read a row, write back
+│   ├── nightly_content.md      # Phase 1 playbook (Tier B → Needs Approval)
+│   ├── money_digest.md         # Phase 3B playbook (Tier C, read/alert only)
+│   └── README.md               # schedule + 15-runs/day budget
 ├── src/empire_ops/
 │   ├── airtable.py             # the single Airtable client (all base I/O)
+│   ├── approvals.py            # push Tier-B drafts to Needs Approval
 │   ├── config.py               # env loading + validation
+│   ├── content.py              # Content Queue lifecycle helpers
+│   ├── digest.py               # money/sales digest compose + write
 │   ├── guardrails.py           # tier enforcement (A/B/C)
+│   ├── notify.py               # Slack notifications
 │   └── schema.py               # live table/field IDs
-├── tests/test_guardrails.py
+├── tests/                      # guardrails, approvals, digest, content, notify
 └── .agents/skills/             # HyperFrames skill set (creative execution)
 ```
 

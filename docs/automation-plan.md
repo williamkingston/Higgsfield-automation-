@@ -4,9 +4,10 @@ A staged build plan for turning the connector + Claude Code + Higgsfield/Suno
 stack into real, mostly-unattended automation across the ventures — without
 burning capital or risking the money/credit side.
 
-> **Status:** Phase 0 foundation shipped. Empire Ops base is live
-> (`applx48uo2056erUB`); the read/write loop is verified; guardrails are encoded
-> and tested. See `docs/empire-ops-base.md` and `src/empire_ops/`.
+> **Status:** Phase 0 shipped (live Empire Ops base, verified loop, enforced
+> guardrails). Phase 1 (content engine) and Phase 3B (money digest) are built as
+> tested `empire_ops` helpers + routine playbooks, pending credentials /
+> connector re-auth for live runs. See `routines/` and `src/empire_ops/`.
 
 ---
 

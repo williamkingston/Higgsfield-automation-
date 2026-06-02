@@ -15,8 +15,11 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 **Phase 0 (Foundation) is shipped.** The "Empire Ops" Airtable base is live
 (`applx48uo2056erUB`), the read/write loop is verified, and the guardrail tiers
-are encoded and tested. See `docs/automation-plan.md` for the staged roadmap and
-`docs/empire-ops-base.md` for the live schema. Update this file as the codebase grows.
+are encoded and tested. **Phase 1 (content engine) and Phase 3B (money digest)**
+are built as tested `empire_ops` helpers + routine playbooks, pending credentials
+for live runs. See `docs/automation-plan.md` for the staged roadmap,
+`docs/empire-ops-base.md` for the live schema, and `routines/README.md` for the
+schedule. Update this file as the codebase grows.
 
 ## Development Setup
 
@@ -55,9 +58,11 @@ Update this section as directories are created:
 ├── README.md                   # User-facing documentation
 ├── config/guardrails.yaml      # §4 guardrail tiers (machine-readable, enforced)
 ├── docs/                       # automation-plan.md, empire-ops-base.md
-├── routines/                   # Scheduled routines (hello_world.py = Phase 0)
-├── src/empire_ops/             # Package: airtable client, config, guardrails, schema
-├── tests/                      # Test suite (guardrail policy)
+├── routines/                   # Scheduled routines: hello_world.py (P0),
+│                               #   nightly_content.md (P1), money_digest.md (P3B)
+├── src/empire_ops/             # Package: airtable, approvals, content, digest,
+│                               #   notify, config, guardrails, schema
+├── tests/                      # Test suite (guardrails, approvals, digest, content, notify)
 └── .agents/skills/             # HyperFrames creative-execution skill set
 ```
 

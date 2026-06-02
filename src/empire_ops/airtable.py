@@ -72,8 +72,15 @@ class AirtableClient:
         filter_by_formula: str | None = None,
         sort: list[dict[str, str]] | None = None,
     ) -> Iterator[dict]:
-        """Yield records from a table, transparently following pagination."""
-        params: dict[str, Any] = {"pageSize": page_size}
+        """Yield records from a table, transparently following pagination.
+
+        Fields come back keyed by field ID (not name) so reads line up with how
+        we write and with the constants in ``schema.py``.
+        """
+        params: dict[str, Any] = {
+            "pageSize": page_size,
+            "returnFieldsByFieldId": "true",
+        }
         if filter_by_formula:
             params["filterByFormula"] = filter_by_formula
         if sort:
