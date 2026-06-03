@@ -1,0 +1,18 @@
+"""Higgsfield automation: generate episodic AI video series."""
+
+from .client import HiggsfieldClient, HiggsfieldError, Job, JobFailedError
+from .config import Config
+from .models import Episode, Scene, Series
+from .pipeline import EpisodePipeline
+
+__all__ = [
+    "Config",
+    "Episode",
+    "EpisodePipeline",
+    "HiggsfieldClient",
+    "HiggsfieldError",
+    "Job",
+    "JobFailedError",
+    "Scene",
+    "Series",
+]

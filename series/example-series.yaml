@@ -1,0 +1,48 @@
+# Example episodic series. Copy this file, rename it, and make it your own.
+#
+# - `style` and `character_bible` are prepended to every scene prompt so your
+#   show keeps a consistent look and cast across episodes.
+# - Each scene becomes one Higgsfield video-generation job.
+
+title: "The Lighthouse Keeper"
+
+style: >-
+  Cinematic, moody coastal atmosphere, volumetric fog, golden-hour lighting,
+  35mm film grain, shallow depth of field
+
+character_bible: >-
+  MARA, a weathered lighthouse keeper in her 60s with silver braided hair and a
+  navy wool coat; her companion is a one-eyed grey cat named PILOT
+
+aspect_ratio: "16:9"
+
+default_params:
+  fps: 24
+
+episodes:
+  - number: 1
+    title: "The Last Light"
+    synopsis: >-
+      A storm rolls in and Mara discovers the lighthouse lamp has gone dark for
+      the first time in forty years.
+    scenes:
+      - id: scene-01
+        prompt: >-
+          Wide establishing shot of a lone lighthouse on a rocky cliff at dusk,
+          waves crashing below, storm clouds gathering on the horizon
+        duration_seconds: 6
+        motion: slow push-in
+
+      - id: scene-02
+        prompt: >-
+          Mara stands at the lighthouse window watching the storm, worry on her
+          face, lamplight flickering behind her
+        duration_seconds: 5
+        motion: subtle handheld
+
+      - id: scene-03
+        prompt: >-
+          Close-up of the lighthouse lamp sputtering and going dark, Pilot the
+          cat watching from a windowsill
+        duration_seconds: 5
+        motion: static
