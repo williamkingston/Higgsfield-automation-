@@ -1,14 +1,17 @@
 #!/bin/bash
 # SessionStart hook: ensure the HyperFrames skill subset is present.
 #
-# The skills (hyperframes, gsap, remotion-to-hyperframes, website-to-hyperframes)
-# are committed under .agents/skills/, so a fresh clone already has them and this
-# hook is normally a fast no-op. If a working tree is missing any of them, restore
-# from the repo's own git — the reliable source of truth.
+# The skills (impeccable, hyperframes, gsap, remotion-to-hyperframes,
+# website-to-hyperframes) are committed under .agents/skills/, so a fresh clone
+# already has them and this hook is normally a fast no-op. If a working tree is
+# missing any of them, restore from the repo's own git — the reliable source of
+# truth.
 #
 # Note: `npx impeccable skills install` cannot be used as a restore path here.
 # The environment network policy blocks impeccable.style (HTTP 403,
-# x-deny-reason: host_not_allowed), so we never reach out over the network.
+# x-deny-reason: host_not_allowed), so we never reach out over the network. The
+# impeccable skill was vendored from the package's source repo (pbakaus/impeccable
+# on GitHub) instead, and lives in git like the rest.
 set -euo pipefail
 
 # Only run in Claude Code on the web (remote) sessions.
@@ -18,7 +21,7 @@ fi
 
 ROOT="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 SKILLS_DIR="$ROOT/.agents/skills"
-SKILLS=(hyperframes gsap remotion-to-hyperframes website-to-hyperframes)
+SKILLS=(impeccable hyperframes gsap remotion-to-hyperframes website-to-hyperframes)
 
 missing=()
 for s in "${SKILLS[@]}"; do
