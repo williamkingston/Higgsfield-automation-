@@ -38,8 +38,15 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 
 | Variable | Description |
 |---|---|
-| `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
-| `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
+| `HIGGSFIELD_API_KEY` | Higgsfield Cloud API key (from https://cloud.higgsfield.ai/api-keys) |
+| `HIGGSFIELD_API_SECRET` | Higgsfield Cloud API secret, paired with the key |
+| `HIGGSFIELD_KEY` | Optional combined `key:secret` value (alternative to the two above) |
+| `HIGGSFIELD_API_BASE` | API base URL (default: `https://platform.higgsfield.ai/v1`) |
+
+> Note: the client (`src/client.py`) targets the Higgsfield Cloud surface
+> (`platform.higgsfield.ai/v1`, key + secret auth), ported from OpenMontage.
+> See `docs/openmontage-integration.md` for the rationale and the open question
+> about which API surface your account uses.
 
 ## Project Structure
 
@@ -49,11 +56,13 @@ Update this section as directories are created:
 .
 ├── CLAUDE.md            # This file
 ├── .env.example         # Environment variable template
+├── requirements.txt     # Runtime dependencies
 ├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── src/
+│   └── client.py        # Single Higgsfield API client (submit/poll/download)
+├── tests/               # Test suite (pytest)
+├── docs/                # Additional documentation
+└── .agents/skills/      # Vendored agent skills (impeccable, taste, OpenMontage, …)
 ```
 
 ## Key Conventions
