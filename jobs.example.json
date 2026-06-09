@@ -1,0 +1,14 @@
+[
+  {
+    "key": "neon-city",
+    "prompt": "a neon city skyline at night, cinematic, slow camera push-in",
+    "output": "output/neon-city.mp4",
+    "params": { "model": "seedance_2.0", "duration": 5, "aspect_ratio": "16:9" }
+  },
+  {
+    "key": "forest-spirit",
+    "prompt": "a forest spirit drifting through ancient woods, ghibli style",
+    "output": "output/forest-spirit.mp4",
+    "params": { "model": "seedance_2.0_fast", "duration": 5, "aspect_ratio": "9:16" }
+  }
+]
