@@ -32,7 +32,7 @@ class FakeSession:
 
 
 def make_config():
-    return LovartConfig(access_key="ak_test", secret_key="sk_test", api_base="https://api.lovart.ai")
+    return LovartConfig(api_key="key_test", api_base="https://api.lovart.ai")
 
 
 # -- Config ------------------------------------------------------------
@@ -40,25 +40,23 @@ def make_config():
 
 def test_config_from_env_reads_and_strips():
     env = {
-        "LOVART_ACCESS_KEY": " ak_abc ",
-        "LOVART_SECRET_KEY": "sk_def",
+        "LOVART_API_KEY": " key_abc ",
         "LOVART_API_BASE": "https://example.com/",
     }
     config = LovartConfig.from_env(env)
-    assert config.access_key == "ak_abc"
-    assert config.secret_key == "sk_def"
+    assert config.api_key == "key_abc"
     assert config.api_base == "https://example.com"  # trailing slash trimmed
 
 
 def test_config_from_env_defaults_base():
-    config = LovartConfig.from_env({"LOVART_ACCESS_KEY": "ak", "LOVART_SECRET_KEY": "sk"})
+    config = LovartConfig.from_env({"LOVART_API_KEY": "key"})
     assert config.api_base == "https://api.lovart.ai"
 
 
 def test_config_from_env_missing_credentials():
     with pytest.raises(ValueError) as exc:
-        LovartConfig.from_env({"LOVART_ACCESS_KEY": "ak"})
-    assert "LOVART_SECRET_KEY" in str(exc.value)
+        LovartConfig.from_env({})
+    assert "LOVART_API_KEY" in str(exc.value)
 
 
 # -- Auth headers ------------------------------------------------------
@@ -69,8 +67,7 @@ def test_auth_headers_sent_on_request():
     client = LovartClient(make_config(), session=session)
     client.request("GET", "/v1/ping")
     headers = session.calls[0]["headers"]
-    assert headers["X-Access-Key"] == "ak_test"
-    assert headers["X-Secret-Key"] == "sk_test"
+    assert headers["X-API-Key"] == "key_test"
 
 
 # -- Retries -----------------------------------------------------------

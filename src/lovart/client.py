@@ -7,11 +7,10 @@ asynchronous job-polling pattern Lovart uses for generation work.
 
 Authentication
 --------------
-Lovart issues an access-key / secret-key pair (``ak_...`` / ``sk_...``). This
-client sends both on every request via the ``X-Access-Key`` and ``X-Secret-Key``
-headers. If your Lovart account uses a different scheme (for example an HMAC
-request signature), override :meth:`LovartClient._auth_headers` — that method is
-the single place auth is applied.
+Lovart authenticates with a single API key sent on every request via the
+``X-API-Key`` header. If your Lovart account uses a different scheme (for
+example a ``Bearer`` token), override :meth:`LovartClient._auth_headers` —
+that method is the single place auth is applied.
 """
 
 from __future__ import annotations
@@ -91,13 +90,9 @@ class LovartClient:
         """Return the headers that authenticate a request.
 
         Single source of truth for auth — change this method if Lovart's
-        scheme differs. Never log the returned values; the secret key is
-        sensitive.
+        scheme differs. Never log the returned value; the API key is sensitive.
         """
-        return {
-            "X-Access-Key": self.config.access_key,
-            "X-Secret-Key": self.config.secret_key,
-        }
+        return {"X-API-Key": self.config.api_key}
 
     # -- Low-level request ----------------------------------------------
 
