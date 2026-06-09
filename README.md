@@ -22,6 +22,8 @@ series.yaml  ──►  Series ─► Episode ─► Scene ─┐
   auth, exponential backoff on `429`/`5xx`, and async job polling.
 - **Crash-recoverable**: each scene's job id is persisted to `jobs.json`, so a
   re-run skips already-completed scenes instead of regenerating (and paying) again.
+- **Auto-assembled**: once an episode's scenes are generated, the clips are
+  stitched into a single `episode.mp4` with ffmpeg (lossless stream copy).
 
 ## Setup
 
@@ -38,7 +40,9 @@ cp .env.example .env      # then add your HIGGSFIELD_API_KEY
 python scripts/generate_episode.py series/example-series.yaml --episode 1
 ```
 
-Clips and a `manifest.json` land in `output/<series>/ep01/`.
+Scene clips, the stitched `episode.mp4`, and a `manifest.json` land in
+`output/<series>/ep01/`. Assembly needs [`ffmpeg`](https://ffmpeg.org) on your
+PATH; without it, the individual clips are still produced and the step is skipped.
 
 ## Define your own show
 

@@ -13,6 +13,7 @@ from pathlib import Path
 
 import requests
 
+from .assemble import concat_clips, ffmpeg_available
 from .client import HiggsfieldClient
 from .models import Episode, Scene, Series
 
@@ -39,13 +40,29 @@ class EpisodePipeline:
             records[scene.id] = self._generate_scene(series, episode, scene, ep_dir)
             _save_records(ep_dir, records)
 
+        combined = self._assemble(episode, ep_dir)
+
         manifest_path = ep_dir / "manifest.json"
-        manifest_path.write_text(
-            json.dumps(_build_manifest(series, episode, records), indent=2),
-            encoding="utf-8",
-        )
+        manifest = _build_manifest(series, episode, records)
+        manifest["episode_file"] = combined.name if combined else None
+        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
         logger.info("Episode complete: %s", manifest_path)
         return manifest_path
+
+    def _assemble(self, episode: Episode, ep_dir: Path) -> Path | None:
+        """Stitch the episode's scene clips into a single video, if possible."""
+        clips = [_clip_path(ep_dir, s) for s in episode.scenes if _clip_path(ep_dir, s).exists()]
+        if not clips:
+            logger.warning("No clips available to assemble for %s.", episode.slug)
+            return None
+        if not ffmpeg_available():
+            logger.warning("ffmpeg not found; skipping episode assembly.")
+            return None
+        try:
+            return concat_clips(clips, ep_dir / "episode.mp4")
+        except Exception as exc:  # assembly is best-effort; clips are still on disk.
+            logger.warning("Episode assembly failed: %s", exc)
+            return None
 
     def _generate_scene(
         self, series: Series, episode: Episode, scene: Scene, ep_dir: Path
