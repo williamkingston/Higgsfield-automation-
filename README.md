@@ -18,8 +18,10 @@ series.yaml  ──►  Series ─► Episode ─► Scene ─┐
                               output/<series>/<epNN>/manifest.json
 ```
 
-- **One client module** (`src/higgsfield/client.py`) for all API calls — bearer
-  auth, exponential backoff on `429`/`5xx`, and async job polling.
+- **Pluggable backends** (`src/higgsfield/backends.py`) — generate scenes with the
+  hosted **Higgsfield** API or a local **LTX-Video** model, chosen per series.
+- **One client module** (`src/higgsfield/client.py`) for all Higgsfield API calls —
+  bearer auth, exponential backoff on `429`/`5xx`, and async job polling.
 - **Crash-recoverable**: each scene's job id is persisted to `jobs.json`, so a
   re-run skips already-completed scenes instead of regenerating (and paying) again.
 - **Auto-assembled**: once an episode's scenes are generated, the clips are
@@ -64,6 +66,37 @@ episodes:
         duration_seconds: 6
         motion: slow push-in
 ```
+
+## Backends
+
+Each series picks how its scenes are generated via a `backend:` field.
+
+### Higgsfield (hosted API — default)
+
+```yaml
+backend: higgsfield
+```
+
+Needs `HIGGSFIELD_API_KEY`. Scenes are submitted as async jobs and downloaded
+when complete.
+
+### LTX-Video (local, open-source)
+
+Runs [Lightricks/LTX-Video](https://github.com/Lightricks/LTX-Video) on your own
+GPU — no per-clip API cost. Clone it and install its requirements first, then:
+
+```yaml
+backend: ltx
+backend_options:
+  repo_dir: /path/to/LTX-Video          # or set LTX_VIDEO_DIR
+  pipeline_config: configs/ltxv-13b-0.9.7-dev.yaml
+```
+
+The backend shells out to LTX-Video's `inference.py`, mapping each scene's
+`aspect_ratio` → height/width, `duration_seconds` × `fps` → `num_frames`
+(rounded to LTX's required `8k+1`), and `image_reference` → image conditioning.
+The rendered clip is moved into `output/<series>/<epNN>/`, so assembly and the
+rest of the pipeline work identically regardless of backend.
 
 ## Tests
 

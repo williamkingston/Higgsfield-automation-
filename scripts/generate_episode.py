@@ -14,7 +14,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from higgsfield import Config, EpisodePipeline, HiggsfieldClient, Series  # noqa: E402
+from higgsfield import (  # noqa: E402
+    EpisodePipeline,
+    Series,
+    build_backend,
+    resolve_output_dir,
+)
 
 
 def main() -> int:
@@ -29,12 +34,11 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(message)s",
     )
 
-    config = Config.from_env()
     series = Series.from_yaml(args.series)
     episode = series.episode(args.episode)
 
-    client = HiggsfieldClient(api_key=config.api_key, api_base=config.api_base)
-    pipeline = EpisodePipeline(client, config.output_dir)
+    backend = build_backend(series)
+    pipeline = EpisodePipeline(backend, resolve_output_dir())
     manifest = pipeline.generate_episode(series, episode)
 
     print(f"Done. Manifest: {manifest}")

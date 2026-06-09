@@ -72,6 +72,8 @@ class Series:
     aspect_ratio: str
     default_params: dict[str, Any]
     episodes: list[Episode]
+    backend: str = "higgsfield"
+    backend_options: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Series":
@@ -85,6 +87,8 @@ class Series:
             aspect_ratio=str(data.get("aspect_ratio", "16:9")),
             default_params=dict(data.get("default_params", {})),
             episodes=[Episode.from_dict(e) for e in episodes_data],
+            backend=str(data.get("backend", "higgsfield")),
+            backend_options=dict(data.get("backend_options", {})),
         )
 
     @classmethod

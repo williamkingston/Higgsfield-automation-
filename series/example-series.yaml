@@ -6,6 +6,14 @@
 
 title: "The Lighthouse Keeper"
 
+# Generation backend: "higgsfield" (hosted API, default) or "ltx" (local LTX-Video).
+# For LTX, point it at a cloned Lightricks/LTX-Video checkout:
+#   backend: ltx
+#   backend_options:
+#     repo_dir: /path/to/LTX-Video        # or set LTX_VIDEO_DIR
+#     pipeline_config: configs/ltxv-13b-0.9.7-dev.yaml
+backend: higgsfield
+
 style: >-
   Cinematic, moody coastal atmosphere, volumetric fog, golden-hour lighting,
   35mm film grain, shallow depth of field

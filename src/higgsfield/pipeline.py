@@ -1,8 +1,8 @@
 """Episode generation pipeline.
 
-Turns an Episode's scenes into Higgsfield video jobs, persists each job id so a
-restart can recover in-flight work, polls to completion, downloads the rendered
-clips, and writes a manifest describing the episode.
+Turns an Episode's scenes into video-generation jobs via a pluggable backend
+(Higgsfield API or local LTX-Video), persists each scene's result so a restart
+can recover, assembles the clips, and writes a manifest describing the episode.
 """
 
 from __future__ import annotations
@@ -11,18 +11,16 @@ import json
 import logging
 from pathlib import Path
 
-import requests
-
 from .assemble import concat_clips, ffmpeg_available
-from .client import HiggsfieldClient
+from .backends import Backend
 from .models import Episode, Scene, Series
 
 logger = logging.getLogger("higgsfield")
 
 
 class EpisodePipeline:
-    def __init__(self, client: HiggsfieldClient, output_dir: Path) -> None:
-        self._client = client
+    def __init__(self, backend: Backend, output_dir: Path) -> None:
+        self._backend = backend
         self._output_dir = Path(output_dir)
 
     def generate_episode(self, series: Series, episode: Episode) -> Path:
@@ -79,20 +77,16 @@ class EpisodePipeline:
         if scene.image_reference:
             params["image_reference"] = scene.image_reference
 
-        job = self._client.create_video_job(prompt, **params)
-        logger.info("Scene %s submitted as job %s", scene.id, job.id)
-
-        job = self._client.wait_for_job(job.id)
-        clip_path = _clip_path(ep_dir, scene)
-        if job.output_url:
-            _download(job.output_url, clip_path)
+        logger.info("Scene %s -> %s backend", scene.id, self._backend.name)
+        result = self._backend.generate(prompt, _clip_path(ep_dir, scene), **params)
 
         return {
             "scene_id": scene.id,
-            "job_id": job.id,
-            "status": job.status,
-            "output_url": job.output_url,
-            "clip": clip_path.name if job.output_url else None,
+            "backend": result.backend,
+            "job_id": result.job_id,
+            "status": result.status,
+            "output_url": result.output_url,
+            "clip": result.clip_path.name if result.clip_path else None,
         }
 
 
@@ -126,14 +120,6 @@ def _build_manifest(series: Series, episode: Episode, records: dict) -> dict:
         "title": episode.title,
         "synopsis": episode.synopsis,
         "aspect_ratio": series.aspect_ratio,
+        "backend": series.backend,
         "scenes": [records.get(s.id) for s in episode.scenes],
     }
-
-
-def _download(url: str, dest: Path) -> None:
-    with requests.get(url, stream=True, timeout=120) as response:
-        response.raise_for_status()
-        with open(dest, "wb") as handle:
-            for chunk in response.iter_content(chunk_size=8192):
-                handle.write(chunk)
-    logger.info("Downloaded %s", dest)

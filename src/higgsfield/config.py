@@ -33,6 +33,12 @@ class Config:
             )
 
         api_base = os.environ.get("HIGGSFIELD_API_BASE", DEFAULT_API_BASE).rstrip("/")
-        output_dir = Path(os.environ.get("HIGGSFIELD_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
 
-        return cls(api_key=api_key, api_base=api_base, output_dir=output_dir)
+        return cls(api_key=api_key, api_base=api_base, output_dir=resolve_output_dir())
+
+
+def resolve_output_dir() -> Path:
+    """Output directory, usable by any backend without requiring API credentials."""
+    if load_dotenv is not None:
+        load_dotenv()
+    return Path(os.environ.get("HIGGSFIELD_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
