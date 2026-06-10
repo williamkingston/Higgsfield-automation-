@@ -1,0 +1,92 @@
+# MYTHREALM
+# A cinematic creature-bonding adventure series (in the spirit of monster-taming
+# sagas, with an original world and cast).
+#
+# World: Across the wild elemental lands of Mythrealm roam the Mythra — mythical
+# creatures born of nature's elements. Young "tamers" set out to earn a Mythra's
+# trust and bond with it using glowing Glyphstones. The bond is a friendship, not
+# a capture: a Mythra must choose its tamer back.
+#
+# Backend: defaults to Higgsfield (set HIGGSFIELD_API_KEY). Switch to `ltx` to
+# render locally (see series/example-series-ltx.yaml).
+
+title: "Mythrealm"
+
+backend: higgsfield
+
+style: >-
+  Vibrant cinematic animated-film look, lush saturated colors, dynamic anime-
+  inspired adventure energy, soft volumetric light, expressive characters,
+  detailed fantasy creature design, sweeping camera moves, shallow depth of field,
+  warm storybook atmosphere
+
+character_bible: >-
+  ARI SOLENNE, a bright-eyed 13-year-old rookie tamer with tousled dark hair,
+  green eyes, brass goggles pushed up on the forehead, an oversized weatherproof
+  jacket, and a bandolier of softly glowing Glyphstones. Ari's first companion is
+  PIP, a knee-high Mythra resembling a fox kit crossed with a forest spirit:
+  mossy green fur, leaf-shaped ears, amber eyes, a glowing rune on its brow, and a
+  tail tipped with a budding flower.
+
+aspect_ratio: "16:9"
+
+default_params:
+  fps: 24
+  seed: 2049
+
+episodes:
+  - number: 1
+    title: "The First Bond"
+    synopsis: >-
+      On the morning every young tamer dreams of, Ari ventures alone into the
+      Whisperwood to earn a first Mythra — and finds a frightened little Pip in
+      danger. Protecting it instead of capturing it sparks a bond no Glyphstone
+      could force.
+    scenes:
+      - id: scene-01
+        prompt: >-
+          Sweeping aerial establishing shot of the wild lands of Mythrealm at
+          dawn, rolling green valleys and glowing rivers, distant mythical
+          creatures soaring and roaming, golden mist catching the sunrise
+        duration_seconds: 7
+        motion: slow aerial reveal
+
+      - id: scene-02
+        prompt: >-
+          Ari standing at the edge of a hillside tamer village, holding up a
+          single empty Glyphstone that catches the morning light, eyes shining
+          with excitement, a worn map tucked under one arm
+        duration_seconds: 5
+        motion: slow push-in
+
+      - id: scene-03
+        prompt: >-
+          Ari stepping into the Whisperwood, towering trees with bioluminescent
+          blue leaves, drifting spores of light, tiny shy Mythra peeking from the
+          undergrowth, wonder on Ari's face
+        duration_seconds: 6
+        motion: gentle tracking follow
+
+      - id: scene-04
+        prompt: >-
+          A small frightened Pip cornered at the edge of a mossy ravine by a
+          larger snarling rock-shelled Mythra, Pip's flower-tail trembling, dramatic
+          dappled light through the canopy
+        duration_seconds: 6
+        motion: handheld tension
+
+      - id: scene-05
+        prompt: >-
+          Ari leaping between Pip and the attacker with arms spread wide, a
+          Glyphstone flaring bright green in one hand, fierce protective expression,
+          leaves and light bursting outward from the bond igniting
+        duration_seconds: 6
+        motion: dynamic push-in
+
+      - id: scene-06
+        prompt: >-
+          Triumphant warm shot of Ari kneeling as Pip nuzzles into their arms then
+          hops onto their shoulder, the brow-rune glowing softly, sunbeams breaking
+          through the trees, the path ahead opening into bright open country
+        duration_seconds: 7
+        motion: rising crane shot
