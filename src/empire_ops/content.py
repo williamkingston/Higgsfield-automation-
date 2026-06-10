@@ -19,6 +19,34 @@ GENERATED = "Generated"
 FAILED = "Failed"
 
 
+def enqueue(
+    client: AirtableClient,
+    *,
+    title: str,
+    prompt: str,
+    brand: str,
+    asset_type: str,
+    tier: str = "B",
+    scheduled_for: str | None = None,
+) -> dict:
+    """Add a row to the Content Queue for the nightly engine to pick up.
+
+    Used both for hand-filled briefs and by upstream routines (e.g. the music
+    pipeline queueing cover art).
+    """
+    fields: dict[str, object] = {
+        ContentQueue.TITLE: title,
+        ContentQueue.PROMPT: prompt,
+        ContentQueue.BRAND: brand,
+        ContentQueue.ASSET_TYPE: asset_type,
+        ContentQueue.STATUS: QUEUED,
+        ContentQueue.GUARDRAIL_TIER: tier,
+    }
+    if scheduled_for:
+        fields[ContentQueue.SCHEDULED_FOR] = scheduled_for
+    return client.create_records(ContentQueue.TABLE_ID, [fields])[0]
+
+
 def _is_due(scheduled_for: str | None, today: date_cls) -> bool:
     """A row is due if it has no schedule or its date is today or earlier."""
     if not scheduled_for:

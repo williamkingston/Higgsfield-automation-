@@ -5,9 +5,10 @@ stack into real, mostly-unattended automation across the ventures — without
 burning capital or risking the money/credit side.
 
 > **Status:** Phase 0 shipped (live Empire Ops base, verified loop, enforced
-> guardrails). Phase 1 (content engine) and Phase 3B (money digest) are built as
-> tested `empire_ops` helpers + routine playbooks, pending credentials /
-> connector re-auth for live runs. See `routines/` and `src/empire_ops/`.
+> guardrails). Phases 1 (content engine), 2 (music pipeline), and 3B (money
+> digest) are built as tested `empire_ops` helpers + routine playbooks, pending
+> credentials / connector re-auth for live runs. See `routines/` and
+> `src/empire_ops/`.
 
 ---
 

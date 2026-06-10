@@ -34,6 +34,21 @@ def test_ready_rows_filters_status_and_due_date():
     assert {r["id"] for r in ready} == {"rec1", "rec4"}
 
 
+def test_enqueue_creates_queued_row():
+    client = FakeAirtable()
+    content.enqueue(
+        client,
+        title="Wr!ch Velvyt teaser",
+        prompt="luxury teaser, dark premium palette",
+        brand="Wr!ch Velvyt",
+        asset_type="Video",
+    )
+    table_id, records = client.created[0]
+    assert table_id == ContentQueue.TABLE_ID
+    assert records[0][ContentQueue.STATUS] == content.QUEUED
+    assert records[0][ContentQueue.GUARDRAIL_TIER] == "B"
+
+
 def test_mark_sets_status_and_output():
     client = FakeAirtable()
     content.mark(

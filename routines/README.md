@@ -17,6 +17,7 @@ The trigger/execution layer. Two styles, by need:
 | When | Routine | File | Tier |
 |---|---|---|---|
 | nightly ~02:00 ET | Content engine | `nightly_content.md` | B (draft → approve) |
+| nightly (shares slot) | Music pipeline | `music_pipeline.md` | B (scaffold → approve) |
 | daily ~07:00 ET | Money/sales digest | `money_digest.md` | C data, read/alert only |
 | on demand | Foundation check | `hello_world.py` | A |
 
