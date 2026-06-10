@@ -17,20 +17,38 @@ This repository is new and currently empty. Update this file as the codebase gro
 
 ## Development Setup
 
-Document the setup steps here once the project is initialised. Common patterns:
+This project uses [uv](https://docs.astral.sh/uv/) to manage the Python
+environment and dependencies. The fastest path is the bootstrap script, which
+installs uv (if missing), syncs the environment, and scaffolds `.env`:
 
 ```bash
-# Python projects
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt   # or: pip install -e ".[dev]"
+./setup.sh
+```
 
-# Node projects
-npm install
+To do it manually:
+
+```bash
+# Install uv (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create .venv and install all deps (incl. dev) from pyproject.toml / uv.lock
+uv sync --extra dev
 
 # Copy and fill in environment variables
 cp .env.example .env
 ```
+
+Run commands inside the environment with `uv run` (no manual activation needed):
+
+```bash
+uv run pytest          # tests
+uv run ruff check .    # lint
+uv run ruff format .   # format
+```
+
+Dependencies are declared in `pyproject.toml` and pinned in `uv.lock` (committed
+for reproducible installs). Add a runtime dependency with `uv add <pkg>` and a
+dev-only one with `uv add --dev <pkg>`.
 
 ## Environment Variables
 
@@ -48,6 +66,10 @@ Update this section as directories are created:
 ```
 .
 ├── CLAUDE.md            # This file
+├── pyproject.toml       # Project metadata & dependencies (uv-managed)
+├── uv.lock              # Pinned dependency versions (committed)
+├── .python-version      # Python version pin for uv
+├── setup.sh             # Bootstrap script (installs uv + syncs env)
 ├── .env.example         # Environment variable template
 ├── README.md            # User-facing documentation
 ├── src/                 # Main source code
@@ -85,14 +107,10 @@ Update this section as directories are created:
 
 ## Running Tests
 
-Document test commands here once a test framework is chosen:
+Tests run under pytest, inside the uv-managed environment:
 
 ```bash
-# Python (pytest)
-pytest
-
-# JavaScript/TypeScript
-npm test
+uv run pytest
 ```
 
 ## CI / CD
