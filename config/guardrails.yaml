@@ -1,0 +1,83 @@
+# Empire Ops guardrail policy (plan §4) — the non-negotiable rules every routine
+# loads before it acts. Encoded as config so enforcement is testable, not just prose.
+#
+# Tiers:
+#   A  fully automate          — safe, reversible. Routine acts directly.
+#   B  automate to a draft     — routine does ~90%, result lands in Needs Approval.
+#   C  never automate          — read & alert only. Routine MUST NOT act.
+
+version: 1
+
+tiers:
+  A:
+    label: Fully automate
+    description: Safe, reversible work. Routines act directly with no human gate.
+    may_act: true
+    requires_approval: false
+    actions:
+      - asset tagging
+      - asset storage
+      - data syncing
+      - reporting
+      - digests
+      - draft generation
+      - catalog updates
+      - calendar updates
+
+  B:
+    label: Automate to a draft
+    description: >
+      Anything customer- or public-facing. The routine produces a finished draft
+      and writes it to the Needs Approval queue. A human hits send.
+    may_act: true
+    requires_approval: true
+    approval_table: Needs Approval
+    actions:
+      - publishing under Wr!ch Velvyt or owner's name
+      - music release decisions
+      - ad-spend changes
+      - customer-facing copy
+      - social posts
+      - shopify listings
+
+  C:
+    label: Never automate
+    description: >
+      Money, credit, and legal. Routines may READ and ALERT only. They must never
+      move money, open/stack credit, trade, sign, or issue refunds.
+    may_act: false
+    requires_approval: false
+    alert_only: true
+    actions:
+      - money movement (Stripe payouts, Mercury/Brex/Ramp transfers)
+      - credit applications and stacking
+      - brokerage or trading
+      - contracts and legal
+      - refunds
+
+# Connector → default tier. A routine touching a connector inherits at least this
+# tier's restrictions. A row may escalate (B→C) but may never de-escalate.
+connector_default_tier:
+  airtable: A
+  cloudinary: A
+  higgsfield: B          # generated creative is a draft until approved
+  suno: B
+  splice: A
+  shopify_read: A
+  shopify_write: B       # listings/products are public-facing
+  quickbooks: C
+  square: A              # read-only sales reporting
+  stripe: C
+  mercury: C
+  brex: C
+  ramp: C
+  credit_karma: C
+
+# Hard stops. If a routine's intended action matches any of these, it aborts —
+# regardless of tier config above.
+never_automate:
+  - withdraw or move money from any account
+  - apply for or manage credit lines / stacking
+  - sign contracts or anything legal
+  - final publish/release under a brand or the owner's name
+  - issue customer refunds or touch customer payment details

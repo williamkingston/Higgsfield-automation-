@@ -13,7 +13,14 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+**Phase 0 (Foundation) is shipped.** The "Empire Ops" Airtable base is live
+(`applx48uo2056erUB`), the read/write loop is verified, and the guardrail tiers
+are encoded and tested. **Phases 1 (content engine), 2 (music pipeline), 3B
+(money digest), and the Phase 5 lead loop** are built as tested `empire_ops`
+helpers + routine playbooks, pending credentials for live runs. See
+`docs/automation-plan.md` for the staged roadmap, `docs/empire-ops-base.md` for
+the live schema, and `routines/README.md` for the schedule. Update this file as
+the codebase grows.
 
 ## Development Setup
 
@@ -47,13 +54,18 @@ Update this section as directories are created:
 
 ```
 .
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── CLAUDE.md                   # This file
+├── .env.example                # Environment variable template
+├── README.md                   # User-facing documentation
+├── config/guardrails.yaml      # §4 guardrail tiers (machine-readable, enforced)
+├── docs/                       # automation-plan.md, empire-ops-base.md
+├── routines/                   # Scheduled routines: hello_world.py (P0),
+│                               #   nightly_content.md (P1), music_pipeline.md (P2),
+│                               #   money_digest.md (P3B), lead_intake.md (P5)
+├── src/empire_ops/             # Package: airtable, approvals, content, music,
+│                               #   leads, digest, notify, config, guardrails, schema
+├── tests/                      # Test suite (guardrails, approvals, digest, content, music, leads, notify)
+└── .agents/skills/             # HyperFrames creative-execution skill set
 ```
 
 ## Key Conventions
