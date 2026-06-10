@@ -17,13 +17,15 @@ publishes or moves money without a gate.
   and enforced by `src/empire_ops/guardrails.py` (tested).
 - ✅ Single Airtable client, env config, and a hello-world routine.
 
-**Phases 1, 2 & 3B — built (tested helpers + routine playbooks)**
+**Phases 1, 2, 3B & 5 (lead loop) — built (tested helpers + routine playbooks)**
 - ✅ Tested helpers: `content` (queue lifecycle + enqueue), `music` (catalog +
-  Suno scaffold + cover-art queue), `approvals` (Tier-B → Needs Approval),
-  `digest` (money pulse → Money Digest Log), `notify` (Slack).
+  Suno scaffold + cover-art queue), `leads` (intake + draft + calendar hold),
+  `approvals` (Tier-B → Needs Approval), `digest` (money pulse → Money Digest
+  Log), `notify` (Slack).
 - ✅ Routine playbooks: [`nightly_content.md`](routines/nightly_content.md),
   [`music_pipeline.md`](routines/music_pipeline.md),
-  [`money_digest.md`](routines/money_digest.md).
+  [`money_digest.md`](routines/money_digest.md),
+  [`lead_intake.md`](routines/lead_intake.md).
 - ⏳ Live runs need credentials/connector re-auth (Higgsfield key; Shopify &
   QuickBooks connectors were expired at build time). See `routines/README.md`.
 
@@ -40,6 +42,7 @@ publishes or moves money without a gate.
 │   ├── nightly_content.md      # Phase 1 playbook (Tier B → Needs Approval)
 │   ├── music_pipeline.md       # Phase 2 playbook (Tier B → Needs Approval)
 │   ├── money_digest.md         # Phase 3B playbook (Tier C, read/alert only)
+│   ├── lead_intake.md          # Phase 5 playbook (Tier B → Needs Approval)
 │   └── README.md               # schedule + 15-runs/day budget
 ├── src/empire_ops/
 │   ├── airtable.py             # the single Airtable client (all base I/O)
@@ -48,10 +51,11 @@ publishes or moves money without a gate.
 │   ├── content.py              # Content Queue lifecycle + enqueue
 │   ├── digest.py               # money/sales digest compose + write
 │   ├── guardrails.py           # tier enforcement (A/B/C)
+│   ├── leads.py                # lead intake + draft + calendar hold
 │   ├── music.py                # Music Catalog + Suno scaffold + cover-art queue
 │   ├── notify.py               # Slack notifications
 │   └── schema.py               # live table/field IDs
-├── tests/                      # guardrails, approvals, digest, content, music, notify
+├── tests/                      # guardrails, approvals, digest, content, music, leads, notify
 └── .agents/skills/             # HyperFrames skill set (creative execution)
 ```
 

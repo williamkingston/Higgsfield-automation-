@@ -19,6 +19,7 @@ The trigger/execution layer. Two styles, by need:
 | nightly ~02:00 ET | Content engine | `nightly_content.md` | B (draft → approve) |
 | nightly (shares slot) | Music pipeline | `music_pipeline.md` | B (scaffold → approve) |
 | daily ~07:00 ET | Money/sales digest | `money_digest.md` | C data, read/alert only |
+| webhook / sweep | Lead intake | `lead_intake.md` | B (draft + hold → approve) |
 | on demand | Foundation check | `hello_world.py` | A |
 
 Batch ventures into shared routines rather than one-per-venture. Leave headroom
