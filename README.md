@@ -83,13 +83,26 @@ when complete.
 ### LTX-Video (local, open-source)
 
 Runs [Lightricks/LTX-Video](https://github.com/Lightricks/LTX-Video) on your own
-GPU — no per-clip API cost. Clone it and install its requirements first, then:
+GPU — no per-clip API cost. Install it with the helper script:
+
+```bash
+./setup-ltx.sh                 # clones LTX-Video into vendor/ and installs it
+export LTX_VIDEO_DIR="$PWD/vendor/LTX-Video"
+```
+
+Then point a series at it:
 
 ```yaml
 backend: ltx
 backend_options:
-  repo_dir: /path/to/LTX-Video          # or set LTX_VIDEO_DIR
+  repo_dir: vendor/LTX-Video            # or set LTX_VIDEO_DIR
   pipeline_config: configs/ltxv-13b-0.9.7-dev.yaml
+```
+
+A ready-made example lives at `series/example-series-ltx.yaml`:
+
+```bash
+python scripts/generate_episode.py series/example-series-ltx.yaml --episode 1
 ```
 
 The backend shells out to LTX-Video's `inference.py`, mapping each scene's
