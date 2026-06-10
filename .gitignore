@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments (uv manages .venv)
+.venv/
+venv/
+
+# Environment / secrets
+.env
+
+# uv
+# uv.lock IS committed for reproducible installs
+
+# OS / editor
+.DS_Store
+*.swp
+
+# HyperFrames skill backups
+.agents/skills/*.bak.*
