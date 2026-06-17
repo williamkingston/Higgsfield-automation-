@@ -13,7 +13,7 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+Active. Contains the AI Social Media Manager for Wrich Velvyt and Blotato API integration.
 
 ## Development Setup
 
@@ -38,6 +38,7 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 
 | Variable | Description |
 |---|---|
+| `BLOTATO_API_KEY` | Blotato API key for social media publishing and visual creation |
 | `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
 | `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
 
@@ -47,13 +48,25 @@ Update this section as directories are created:
 
 ```
 .
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── CLAUDE.md                          # This file
+├── .claude/skills/
+│   └── social-media-manager.md        # AI Social Media Manager skill
+├── .env.example                       # Environment variable template
+├── .gitignore                         # Git ignore rules
+├── requirements.txt                   # Python dependencies
+├── src/
+│   ├── client.py                      # Blotato API client (single entry point)
+│   ├── list_accounts.py               # List connected social accounts
+│   ├── publish_post.py                # Publish a post to a platform
+│   ├── create_visual.py               # Generate visuals from templates
+│   ├── check_visual_status.py         # Poll visual creation status
+│   ├── log_post.py                    # Log a published post
+│   └── view_log.py                    # View post history with filters
+├── data/
+│   └── post-log.json                  # Running log of published posts
+├── tests/                             # Test suite
+├── scripts/                           # One-off or utility scripts
+└── docs/                              # Additional documentation
 ```
 
 ## Key Conventions
@@ -67,7 +80,7 @@ Update this section as directories are created:
 
 ### API Interactions
 
-- All Higgsfield API calls must go through a single client module (e.g., `src/client.py` or `src/api/client.ts`). Never scatter raw `requests`/`fetch` calls across the codebase.
+- All API calls (Higgsfield, Blotato) must go through `src/client.py`. Never scatter raw `requests`/`fetch` calls across the codebase.
 - Respect rate limits; implement exponential backoff on `429` responses.
 - Log API request IDs for traceability, never log API keys or full response bodies that may contain PII.
 
