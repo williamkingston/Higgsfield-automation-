@@ -12,8 +12,9 @@ from __future__ import annotations
 import logging
 import random
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any
 
 import requests
 
@@ -150,7 +151,7 @@ class HiggsfieldClient:
     def close(self) -> None:
         self._session.close()
 
-    def __enter__(self) -> "HiggsfieldClient":
+    def __enter__(self) -> HiggsfieldClient:
         return self
 
     def __exit__(self, *exc: object) -> None:

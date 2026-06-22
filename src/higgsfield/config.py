@@ -33,7 +33,7 @@ class HiggsfieldConfig:
     max_retries: int = 5
 
     @classmethod
-    def from_env(cls, *, load_dotenv_file: bool = True) -> "HiggsfieldConfig":
+    def from_env(cls, *, load_dotenv_file: bool = True) -> HiggsfieldConfig:
         """Build a config from environment variables.
 
         Reads ``HIGGSFIELD_API_KEY`` (required) and ``HIGGSFIELD_API_BASE``

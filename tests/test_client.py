@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from conftest import FakeResponse, FakeSession
-
 from higgsfield.client import HiggsfieldClient
 from higgsfield.config import HiggsfieldConfig
 from higgsfield.errors import APIError, JobError, JobTimeout, RateLimitError

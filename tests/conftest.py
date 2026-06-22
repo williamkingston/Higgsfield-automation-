@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import json as jsonlib
 import sys
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import pytest
 
