@@ -17,19 +17,15 @@ This repository is new and currently empty. Update this file as the codebase gro
 
 ## Development Setup
 
-Document the setup steps here once the project is initialised. Common patterns:
+This is a Python project (Python 3.11+).
 
 ```bash
-# Python projects
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt   # or: pip install -e ".[dev]"
-
-# Node projects
-npm install
+pip install -r requirements.txt
 
 # Copy and fill in environment variables
-cp .env.example .env
+cp .env.example .env   # then set HIGGSFIELD_API_KEY
 ```
 
 ## Environment Variables
@@ -43,18 +39,25 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 
 ## Project Structure
 
-Update this section as directories are created:
-
 ```
 .
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── CLAUDE.md                  # This file
+├── .env.example               # Environment variable template
+├── requirements.txt           # Runtime dependencies
+├── pyproject.toml             # pytest + ruff config
+├── src/higgsfield/            # The Higgsfield client package
+│   ├── client.py              # HiggsfieldClient — the single API entry point
+│   ├── config.py              # HiggsfieldConfig.from_env()
+│   └── errors.py              # Typed exceptions
+├── tests/                     # Test suite (offline, no API key needed)
+└── scripts/
+    └── generate_video.py      # Runnable example: submit a job and wait
 ```
+
+All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
+bearer auth, exponential backoff on `429`/`5xx` (honoring `Retry-After`),
+request-id logging, and the submit-then-poll job pattern via
+`create_generation` → `wait_for_job` (or the combined `generate_and_wait`).
 
 ## Key Conventions
 
@@ -85,15 +88,12 @@ Update this section as directories are created:
 
 ## Running Tests
 
-Document test commands here once a test framework is chosen:
-
 ```bash
-# Python (pytest)
 pytest
-
-# JavaScript/TypeScript
-npm test
 ```
+
+Tests run fully offline — the HTTP session is faked, so no API key or network
+access is required.
 
 ## CI / CD
 
