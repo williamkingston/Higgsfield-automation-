@@ -13,7 +13,8 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
+offline test suite. Update this file as the codebase grows.
 
 ## Development Setup
 
@@ -35,7 +36,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync --extra dev
 
 # Copy and fill in environment variables
-cp .env.example .env
+cp .env.example .env   # then set HIGGSFIELD_API_KEY
 ```
 
 Run commands inside the environment with `uv run` (no manual activation needed):
@@ -61,22 +62,27 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 
 ## Project Structure
 
-Update this section as directories are created:
-
 ```
 .
-├── CLAUDE.md            # This file
-├── pyproject.toml       # Project metadata & dependencies (uv-managed)
-├── uv.lock              # Pinned dependency versions (committed)
-├── .python-version      # Python version pin for uv
-├── setup.sh             # Bootstrap script (installs uv + syncs env)
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── CLAUDE.md                  # This file
+├── pyproject.toml             # Project metadata & dependencies (uv-managed)
+├── uv.lock                    # Pinned dependency versions (committed)
+├── .python-version            # Python version pin for uv
+├── setup.sh                   # Bootstrap script (installs uv + syncs env)
+├── .env.example               # Environment variable template
+├── src/higgsfield/            # The Higgsfield client package
+│   ├── client.py              # HiggsfieldClient — the single API entry point
+│   ├── config.py              # HiggsfieldConfig.from_env()
+│   └── errors.py              # Typed exceptions
+├── tests/                     # Test suite (offline, no API key needed)
+└── scripts/
+    └── generate_video.py      # Runnable example: submit a job and wait
 ```
+
+All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
+bearer auth, exponential backoff on `429`/`5xx` (honoring `Retry-After`),
+request-id logging, and the submit-then-poll job pattern via
+`create_generation` → `wait_for_job` (or the combined `generate_and_wait`).
 
 ## Key Conventions
 
@@ -113,13 +119,15 @@ Tests run under pytest, inside the uv-managed environment:
 uv run pytest
 ```
 
+Tests run fully offline — the HTTP session is faked, so no API key or network
+access is required.
+
 ## CI / CD
 
-Document the CI pipeline here once configured. Common things to capture:
-
-- Which checks must pass before merge (lint, type check, tests)
-- How deployments are triggered
-- Branch protection rules
+GitHub Actions runs on every push to `main` and on every pull request
+(`.github/workflows/ci.yml`): it syncs the uv environment (`uv sync --extra
+dev`), lints with `uv run ruff check .`, and runs `uv run pytest`. Both lint and
+tests must pass before merge.
 
 ## Working with the Higgsfield API
 
