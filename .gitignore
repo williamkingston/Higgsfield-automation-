@@ -24,6 +24,9 @@ venv/
 jobs.json
 output/
 
+# Local model checkouts (e.g. LTX-Video clone)
+vendor/
+
 # OS / editor
 .DS_Store
 *.swp

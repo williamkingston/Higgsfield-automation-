@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 from .errors import ConfigError
 
 DEFAULT_API_BASE = "https://api.higgsfield.ai"
+DEFAULT_OUTPUT_DIR = "output"
 
 
 @dataclass(frozen=True)
@@ -58,3 +60,13 @@ class HiggsfieldConfig:
     def __repr__(self) -> str:  # pragma: no cover - trivial
         # Never expose the key, even in logs or tracebacks.
         return f"HiggsfieldConfig(api_base={self.api_base!r}, timeout={self.timeout})"
+
+
+def resolve_output_dir() -> Path:
+    """Directory for generated clips and job records.
+
+    Usable by any backend without requiring API credentials, so the episodic
+    pipeline can resolve its output location independently of the API config.
+    """
+    load_dotenv()
+    return Path(os.environ.get("HIGGSFIELD_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))

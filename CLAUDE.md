@@ -14,7 +14,9 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 ## Repository Status
 
 The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
-offline test suite. Update this file as the codebase grows.
+offline test suite. On top of it sits an episodic video pipeline (`models.py`,
+`backends.py`, `pipeline.py`, `assemble.py`) that turns a YAML-defined series
+into per-scene generation jobs. Update this file as the codebase grows.
 
 ## Development Setup
 
@@ -70,19 +72,26 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 ├── .python-version            # Python version pin for uv
 ├── setup.sh                   # Bootstrap script (installs uv + syncs env)
 ├── .env.example               # Environment variable template
-├── src/higgsfield/            # The Higgsfield client package
+├── src/higgsfield/            # The Higgsfield package
 │   ├── client.py              # HiggsfieldClient — the single API entry point
-│   ├── config.py              # HiggsfieldConfig.from_env()
-│   └── errors.py              # Typed exceptions
+│   ├── config.py              # HiggsfieldConfig.from_env() + resolve_output_dir()
+│   ├── errors.py              # Typed exceptions
+│   ├── models.py              # Series / Episode / Scene (YAML-loaded)
+│   ├── backends.py            # Higgsfield (API) and LTX-Video (local) backends
+│   ├── pipeline.py            # EpisodePipeline — generate + persist + assemble
+│   └── assemble.py            # ffmpeg concat of an episode's clips
+├── series/                    # Example series definitions (YAML)
 ├── tests/                     # Test suite (offline, no API key needed)
 └── scripts/
-    └── generate_video.py      # Runnable example: submit a job and wait
+    ├── generate_video.py      # Runnable example: submit one job and wait
+    └── generate_episode.py    # Generate a full episode from a series YAML
 ```
 
 All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
 bearer auth, exponential backoff on `429`/`5xx` (honoring `Retry-After`),
 request-id logging, and the submit-then-poll job pattern via
-`create_generation` → `wait_for_job` (or the combined `generate_and_wait`).
+`create_generation` → `wait_for_job` (or the combined `generate_and_wait`). The
+episodic pipeline builds on this client through the `HiggsfieldBackend`.
 
 ## Key Conventions
 
