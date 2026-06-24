@@ -61,6 +61,18 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 |---|---|
 | `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
 | `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
+| `LOVART_API_KEY` | Lovart API key, sent as the `X-API-Key` header; sensitive, never log or commit |
+| `LOVART_API_BASE` | Lovart API base URL (default: `https://api.lovart.ai`) |
+
+### Lovart client
+
+All Lovart calls go through `src/lovart/` (`LovartClient`). It loads the API key
+via `LovartConfig.from_env()`, authenticates each request with the `X-API-Key`
+header, retries on `429`/`5xx` with exponential backoff, and supports the async
+submit-then-poll job pattern (`create_generation` → `wait_for_job`). The auth
+scheme lives in one place (`LovartClient._auth_headers`) so it can be adjusted if
+your Lovart account's requirements differ. See `scripts/lovart_generate.py` for a
+runnable example.
 
 ## Project Structure
 
