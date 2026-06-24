@@ -35,7 +35,7 @@ class FakeResponse:
         self._text = text
 
     @property
-    def ok(self) -> bool:
+    def is_success(self) -> bool:
         return self.status_code < 400
 
     def json(self) -> Any:

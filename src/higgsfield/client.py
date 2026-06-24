@@ -16,7 +16,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-import requests
+import httpx
 
 from .config import HiggsfieldConfig
 from .errors import APIError, JobError, JobTimeout, RateLimitError
@@ -82,11 +82,11 @@ class HiggsfieldClient:
         self,
         config: HiggsfieldConfig | None = None,
         *,
-        session: requests.Session | None = None,
+        session: httpx.Client | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self.config = config or HiggsfieldConfig.from_env()
-        self._session = session or requests.Session()
+        self._session = session or httpx.Client()
         # Injectable so tests don't actually sleep through backoff.
         self._sleep = sleep
 
@@ -213,7 +213,7 @@ class HiggsfieldClient:
                     continue
                 raise last_error
 
-            if not response.ok:
+            if not response.is_success:
                 raise self._error_for(response, request_id)
 
             return _decode_json(response, request_id)
@@ -221,7 +221,7 @@ class HiggsfieldClient:
         # Loop always returns or raises; this satisfies type checkers.
         raise last_error or APIError("Request failed without a response")
 
-    def _backoff_delay(self, attempt: int, response: requests.Response) -> float:
+    def _backoff_delay(self, attempt: int, response: httpx.Response) -> float:
         retry_after = response.headers.get("Retry-After")
         if retry_after:
             try:
@@ -232,7 +232,7 @@ class HiggsfieldClient:
         return random.uniform(0.0, min(60.0, 2.0**attempt))
 
     def _error_for(
-        self, response: requests.Response, request_id: str | None
+        self, response: httpx.Response, request_id: str | None
     ) -> APIError:
         # Deliberately does not include the response body, which may contain PII.
         message = f"Higgsfield API returned {response.status_code}"
@@ -255,7 +255,7 @@ class HiggsfieldClient:
         return Job(id=str(job_id), status=status, raw=data)
 
 
-def _request_id(response: requests.Response) -> str | None:
+def _request_id(response: httpx.Response) -> str | None:
     for header in ("x-request-id", "x-higgsfield-request-id", "request-id"):
         value = response.headers.get(header)
         if value:
@@ -264,7 +264,7 @@ def _request_id(response: requests.Response) -> str | None:
 
 
 def _decode_json(
-    response: requests.Response, request_id: str | None
+    response: httpx.Response, request_id: str | None
 ) -> Mapping[str, Any]:
     try:
         body = response.json()

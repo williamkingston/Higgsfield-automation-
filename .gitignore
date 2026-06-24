@@ -1,6 +1,3 @@
-# Secrets — never commit real credentials
-.env
-
 # Python
 __pycache__/
 *.py[cod]
@@ -8,15 +5,28 @@ __pycache__/
 .eggs/
 build/
 dist/
-.venv/
-venv/
-
-# Test / tooling caches
 .pytest_cache/
 .ruff_cache/
 .coverage
 htmlcov/
 
+# Virtual environments (uv manages .venv)
+.venv/
+venv/
+
+# Environment / secrets
+.env
+
+# uv
+# uv.lock IS committed for reproducible installs
+
 # Job state / generated output
 jobs.json
 output/
+
+# OS / editor
+.DS_Store
+*.swp
+
+# HyperFrames skill backups
+.agents/skills/*.bak.*

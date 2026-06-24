@@ -13,20 +13,43 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
+offline test suite. Update this file as the codebase grows.
 
 ## Development Setup
 
-This is a Python project (Python 3.11+).
+This project uses [uv](https://docs.astral.sh/uv/) to manage the Python
+environment and dependencies. The fastest path is the bootstrap script, which
+installs uv (if missing), syncs the environment, and scaffolds `.env`:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+./setup.sh
+```
+
+To do it manually:
+
+```bash
+# Install uv (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create .venv and install all deps (incl. dev) from pyproject.toml / uv.lock
+uv sync --extra dev
 
 # Copy and fill in environment variables
 cp .env.example .env   # then set HIGGSFIELD_API_KEY
 ```
+
+Run commands inside the environment with `uv run` (no manual activation needed):
+
+```bash
+uv run pytest          # tests
+uv run ruff check .    # lint
+uv run ruff format .   # format
+```
+
+Dependencies are declared in `pyproject.toml` and pinned in `uv.lock` (committed
+for reproducible installs). Add a runtime dependency with `uv add <pkg>` and a
+dev-only one with `uv add --dev <pkg>`.
 
 ## Environment Variables
 
@@ -42,9 +65,11 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 ```
 .
 ├── CLAUDE.md                  # This file
+├── pyproject.toml             # Project metadata & dependencies (uv-managed)
+├── uv.lock                    # Pinned dependency versions (committed)
+├── .python-version            # Python version pin for uv
+├── setup.sh                   # Bootstrap script (installs uv + syncs env)
 ├── .env.example               # Environment variable template
-├── requirements.txt           # Runtime dependencies
-├── pyproject.toml             # pytest + ruff config
 ├── src/higgsfield/            # The Higgsfield client package
 │   ├── client.py              # HiggsfieldClient — the single API entry point
 │   ├── config.py              # HiggsfieldConfig.from_env()
@@ -88,8 +113,10 @@ request-id logging, and the submit-then-poll job pattern via
 
 ## Running Tests
 
+Tests run under pytest, inside the uv-managed environment:
+
 ```bash
-pytest
+uv run pytest
 ```
 
 Tests run fully offline — the HTTP session is faked, so no API key or network
@@ -97,11 +124,10 @@ access is required.
 
 ## CI / CD
 
-Document the CI pipeline here once configured. Common things to capture:
-
-- Which checks must pass before merge (lint, type check, tests)
-- How deployments are triggered
-- Branch protection rules
+GitHub Actions runs on every push to `main` and on every pull request
+(`.github/workflows/ci.yml`): it syncs the uv environment (`uv sync --extra
+dev`), lints with `uv run ruff check .`, and runs `uv run pytest`. Both lint and
+tests must pass before merge.
 
 ## Working with the Higgsfield API
 
