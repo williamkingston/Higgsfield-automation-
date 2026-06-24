@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "skills/just-scrape/SKILL.md",
       "computedHash": "a9a4d7e5d1f44c351f0a7eecd486c8b9107aa866348fd0e6fb92453c0f387245"
+    },
+    "emil-design-eng": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "8bdf9e4e6de7a4969147bf4828a4ad2c5aacd9fba4b690b250a85e0467ca387d"
     }
   }
 }

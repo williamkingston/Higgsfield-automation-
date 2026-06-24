@@ -30,8 +30,8 @@ series.yaml  ──►  Series ─► Episode ─► Scene ─┐
 ## Setup
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+./setup.sh                # installs uv (if needed), syncs deps, scaffolds .env
+# or manually: uv sync --extra dev
 
 cp .env.example .env      # then add your HIGGSFIELD_API_KEY
 ```

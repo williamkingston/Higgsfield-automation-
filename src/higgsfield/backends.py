@@ -19,14 +19,15 @@ import shlex
 import shutil
 import subprocess
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
-import requests
+import httpx
 
 from .client import HiggsfieldClient
-from .config import Config
+from .config import HiggsfieldConfig
 from .models import Series
 
 logger = logging.getLogger("higgsfield")
@@ -42,7 +43,7 @@ class GenerationResult:
 
     @property
     def succeeded(self) -> bool:
-        return self.status == "completed" and self.clip_path is not None
+        return self.clip_path is not None
 
 
 class Backend(ABC):
@@ -64,8 +65,9 @@ class HiggsfieldBackend(Backend):
         self._client = client
 
     def generate(self, prompt: str, output_path: Path, **params: Any) -> GenerationResult:
-        job = self._client.create_video_job(prompt, **params)
+        job = self._client.create_generation({"prompt": prompt, **params})
         logger.info("Higgsfield job %s submitted", job.id)
+        # wait_for_job returns only on success; it raises JobError/JobTimeout otherwise.
         job = self._client.wait_for_job(job.id)
         clip: Path | None = None
         if job.output_url:
@@ -191,8 +193,7 @@ def build_backend(series: Series) -> Backend:
     opts = series.backend_options
 
     if name == "higgsfield":
-        config = Config.from_env()
-        return HiggsfieldBackend(HiggsfieldClient(config.api_key, config.api_base))
+        return HiggsfieldBackend(HiggsfieldClient(HiggsfieldConfig.from_env()))
 
     if name in ("ltx", "ltx-video", "ltxvideo"):
         repo_dir = opts.get("repo_dir") or os.environ.get("LTX_VIDEO_DIR")
@@ -212,9 +213,9 @@ def build_backend(series: Series) -> Backend:
 
 
 def _download(url: str, dest: Path) -> None:
-    with requests.get(url, stream=True, timeout=120) as response:
+    with httpx.stream("GET", url, timeout=120, follow_redirects=True) as response:
         response.raise_for_status()
         with open(dest, "wb") as handle:
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in response.iter_bytes(chunk_size=8192):
                 handle.write(chunk)
     logger.info("Downloaded %s", dest)

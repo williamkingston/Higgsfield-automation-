@@ -1,13 +1,14 @@
-import sys
-from pathlib import Path
-
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-
-from higgsfield import HiggsfieldClient, LTXVideoBackend, Series, build_backend  # noqa: E402
-from higgsfield import backends  # noqa: E402
-from higgsfield.backends import _resolve_num_frames  # noqa: E402
+from higgsfield import (
+    HiggsfieldClient,
+    HiggsfieldConfig,
+    LTXVideoBackend,
+    Series,
+    backends,
+    build_backend,
+)
+from higgsfield.backends import _resolve_num_frames
 
 
 def _fake_ltx_repo(tmp_path):
@@ -71,23 +72,29 @@ def test_build_backend_ltx_needs_repo_dir(monkeypatch):
 
 
 def test_build_backend_ltx_from_options(tmp_path):
-    series = _series_with(backend="ltx", backend_options={"repo_dir": str(_fake_ltx_repo(tmp_path))})
+    series = _series_with(
+        backend="ltx", backend_options={"repo_dir": str(_fake_ltx_repo(tmp_path))}
+    )
     backend = build_backend(series)
     assert isinstance(backend, LTXVideoBackend)
 
 
-def test_higgsfield_backend_generate(monkeypatch):
-    from test_client import FakeResponse, FakeSession  # reuse stubs
+def test_higgsfield_backend_generate(monkeypatch, tmp_path):
+    from conftest import FakeResponse, FakeSession  # offline HTTP stubs
 
-    monkeypatch.setattr("higgsfield.client.time.sleep", lambda _s: None)
     monkeypatch.setattr(backends, "_download", lambda url, dest: dest.write_bytes(b"x"))
 
     session = FakeSession([
         FakeResponse(200, {"id": "j1", "status": "queued"}),
         FakeResponse(200, {"id": "j1", "status": "completed", "output_url": "http://x/v.mp4"}),
     ])
-    backend = backends.HiggsfieldBackend(HiggsfieldClient("k", "https://api.test", session=session))
-    result = backend.generate("p", Path("/tmp/scene.mp4"), aspect_ratio="16:9")
+    client = HiggsfieldClient(
+        HiggsfieldConfig(api_key="k", api_base="https://api.test"),
+        session=session,
+        sleep=lambda _s: None,
+    )
+    backend = backends.HiggsfieldBackend(client)
+    result = backend.generate("p", tmp_path / "scene.mp4", aspect_ratio="16:9")
     assert result.succeeded
     assert result.job_id == "j1"
     assert result.output_url == "http://x/v.mp4"

@@ -29,10 +29,16 @@ class EpisodePipeline:
         ep_dir.mkdir(parents=True, exist_ok=True)
         records = _load_records(ep_dir)
 
-        logger.info("Generating %s '%s' (%d scenes)", episode.slug, episode.title, len(episode.scenes))
+        logger.info(
+            "Generating %s '%s' (%d scenes)",
+            episode.slug,
+            episode.title,
+            len(episode.scenes),
+        )
         for scene in episode.scenes:
             record = records.get(scene.id)
-            if record and record.get("status") == "completed" and _clip_path(ep_dir, scene).exists():
+            done = record and record.get("status") == "completed"
+            if done and _clip_path(ep_dir, scene).exists():
                 logger.info("Scene %s already complete; skipping.", scene.id)
                 continue
             records[scene.id] = self._generate_scene(series, episode, scene, ep_dir)

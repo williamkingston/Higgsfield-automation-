@@ -25,7 +25,7 @@ class Scene:
     params: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, index: int, data: dict[str, Any]) -> "Scene":
+    def from_dict(cls, index: int, data: dict[str, Any]) -> Scene:
         return cls(
             id=str(data.get("id", f"scene-{index + 1:02d}")),
             prompt=_require(data, "prompt", context=f"scene #{index + 1}"),
@@ -48,7 +48,7 @@ class Episode:
         return f"ep{self.number:02d}"
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Episode":
+    def from_dict(cls, data: dict[str, Any]) -> Episode:
         number = int(_require(data, "number", context="episode"))
         scenes_data = data.get("scenes", [])
         if not scenes_data:
@@ -76,7 +76,7 @@ class Series:
     backend_options: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Series":
+    def from_dict(cls, data: dict[str, Any]) -> Series:
         episodes_data = data.get("episodes", [])
         if not episodes_data:
             raise ValueError("Series has no episodes.")
@@ -92,8 +92,8 @@ class Series:
         )
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> "Series":
-        with open(path, "r", encoding="utf-8") as handle:
+    def from_yaml(cls, path: str | Path) -> Series:
+        with open(path, encoding="utf-8") as handle:
             return cls.from_dict(yaml.safe_load(handle))
 
     def episode(self, number: int) -> Episode:
