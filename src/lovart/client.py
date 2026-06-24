@@ -20,7 +20,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-import requests
+import httpx
 
 from .config import LovartConfig
 
@@ -75,14 +75,14 @@ class LovartClient:
         self,
         config: LovartConfig | None = None,
         *,
-        session: requests.Session | None = None,
+        session: httpx.Client | None = None,
         timeout: float = 30.0,
         max_retries: int = 4,
     ):
         self.config = config or LovartConfig.from_env()
         self.timeout = timeout
         self.max_retries = max_retries
-        self._session = session or requests.Session()
+        self._session = session or httpx.Client()
 
     # -- Authentication -------------------------------------------------
 
@@ -125,7 +125,13 @@ class LovartClient:
             request_id = response.headers.get("x-request-id")
 
             if response.status_code < 400:
-                logger.debug("Lovart %s %s -> %s (request_id=%s)", method, path, response.status_code, request_id)
+                logger.debug(
+                    "Lovart %s %s -> %s (request_id=%s)",
+                    method,
+                    path,
+                    response.status_code,
+                    request_id,
+                )
                 if not response.content:
                     return {}
                 return response.json()
@@ -141,7 +147,13 @@ class LovartClient:
                 delay = self._retry_delay(response, attempt)
                 logger.warning(
                     "Lovart %s %s -> %s, retrying in %.1fs (attempt %d/%d, request_id=%s)",
-                    method, path, response.status_code, delay, attempt + 1, self.max_retries, request_id,
+                    method,
+                    path,
+                    response.status_code,
+                    delay,
+                    attempt + 1,
+                    self.max_retries,
+                    request_id,
                 )
                 time.sleep(delay)
                 continue
@@ -152,7 +164,7 @@ class LovartClient:
         raise last_error
 
     @staticmethod
-    def _retry_delay(response: requests.Response, attempt: int) -> float:
+    def _retry_delay(response: httpx.Response, attempt: int) -> float:
         """Honour a ``Retry-After`` header when present, else exponential backoff."""
         retry_after = response.headers.get("Retry-After")
         if retry_after:

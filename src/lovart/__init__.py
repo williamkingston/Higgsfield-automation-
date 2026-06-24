@@ -1,7 +1,7 @@
 """Lovart API integration."""
 
+from .client import LovartAPIError, LovartClient, LovartError, LovartJob
 from .config import LovartConfig
-from .client import LovartClient, LovartError, LovartAPIError, LovartJob
 
 __all__ = [
     "LovartConfig",

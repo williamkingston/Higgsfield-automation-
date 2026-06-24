@@ -1,8 +1,3 @@
-# Environment / secrets
-.env
-.env.*
-!.env.example
-
 # Python
 __pycache__/
 *.py[cod]
@@ -10,15 +5,31 @@ __pycache__/
 .eggs/
 build/
 dist/
-.venv/
-venv/
 .pytest_cache/
-.mypy_cache/
 .ruff_cache/
 .coverage
 htmlcov/
 
+# Virtual environments (uv manages .venv)
+.venv/
+venv/
+
+# Environment / secrets
+.env
+
+# uv
+# uv.lock IS committed for reproducible installs
+
+# Job state / generated output
+jobs.json
+output/
+
+# Local model checkouts (e.g. LTX-Video clone)
+vendor/
+
 # OS / editor
 .DS_Store
-.idea/
-.vscode/
+*.swp
+
+# HyperFrames skill backups
+.agents/skills/*.bak.*

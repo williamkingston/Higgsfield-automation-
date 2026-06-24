@@ -21,7 +21,7 @@ class LovartConfig:
     api_base: str = DEFAULT_API_BASE
 
     @classmethod
-    def from_env(cls, env: dict[str, str] | None = None) -> "LovartConfig":
+    def from_env(cls, env: dict[str, str] | None = None) -> LovartConfig:
         """Build a config from environment variables.
 
         Raises ``ValueError`` if the API key is missing so failures surface
