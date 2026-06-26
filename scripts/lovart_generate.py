@@ -30,10 +30,12 @@ from lovart import LovartClient, LovartError  # noqa: E402
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate a design with Lovart.")
     parser.add_argument("prompt", help="The design prompt.")
-    parser.add_argument("--project-id", help="Existing project id; a new one is created if omitted.")
+    parser.add_argument("--project-id", help="Existing project id; created if omitted.")
     parser.add_argument("--mode", choices=["fast", "thinking"], help="Generation mode.")
-    parser.add_argument("--auto-confirm", action="store_true", help="Approve high-cost operations automatically.")
-    parser.add_argument("--timeout", type=float, default=600.0, help="Seconds to wait for completion.")
+    parser.add_argument(
+        "--auto-confirm", action="store_true", help="Approve high-cost operations."
+    )
+    parser.add_argument("--timeout", type=float, default=600.0, help="Seconds to wait.")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")

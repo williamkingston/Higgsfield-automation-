@@ -52,10 +52,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Batch-generate Lovart designs.")
     parser.add_argument("prompts_file", type=Path, help="Path to prompts (.txt or .csv).")
     parser.add_argument("--output", type=Path, default=Path("lovart_batch_results.json"))
-    parser.add_argument("--project-id", help="Reuse an existing project; a new one is created if omitted.")
+    parser.add_argument("--project-id", help="Reuse a project; created if omitted.")
     parser.add_argument("--mode", choices=["fast", "thinking"], help="Generation mode.")
-    parser.add_argument("--auto-confirm", action="store_true", help="Approve high-cost operations automatically.")
-    parser.add_argument("--timeout", type=float, default=600.0, help="Per-prompt seconds to wait.")
+    parser.add_argument(
+        "--auto-confirm", action="store_true", help="Approve high-cost operations."
+    )
+    parser.add_argument("--timeout", type=float, default=600.0, help="Per-prompt seconds.")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -106,7 +108,12 @@ def main() -> int:
             logger.error("[%d/%d] Failed: %s", index, len(prompts), exc)
         results.append(entry)
 
-    manifest = {"project_id": project_id, "total": len(prompts), "failures": failures, "results": results}
+    manifest = {
+        "project_id": project_id,
+        "total": len(prompts),
+        "failures": failures,
+        "results": results,
+    }
     args.output.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"Wrote {len(results)} results ({failures} failed) to {args.output}")
     return 1 if failures == len(prompts) else 0
