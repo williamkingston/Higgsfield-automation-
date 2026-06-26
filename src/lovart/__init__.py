@@ -1,6 +1,6 @@
 """Lovart API integration."""
 
-from .client import LovartAPIError, LovartClient, LovartError, LovartJob
+from .client import LovartAPIError, LovartClient, LovartError
 from .config import LovartConfig
 
 __all__ = [
@@ -8,5 +8,4 @@ __all__ = [
     "LovartClient",
     "LovartError",
     "LovartAPIError",
-    "LovartJob",
 ]
