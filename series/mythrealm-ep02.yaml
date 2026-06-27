@@ -1,0 +1,106 @@
+# MYTHREALM — Episode 2
+# Canon and cast in series/mythrealm-bible.md. Scenes anchored to assets/ art via
+# image_reference so Kael, Lunarex, Ariya, and the Mythra stay on-model.
+
+title: "Mythrealm"
+
+backend: higgsfield
+
+style: >-
+  Cinematic dark-fantasy creature-saga key-art, dramatic rim lighting, glowing
+  essence energy and drifting sparks, painterly volumetric atmosphere, rich
+  saturated color, epic anime-film energy, film grain
+
+character_bible: >-
+  KAEL, a determined young tamer with tousled brown hair, a worn traveling jacket,
+  and a blue Awakening-Relic gauntlet that glows on his forearm. LUNAREX, his
+  spectral lunar wolf — dark fur, glowing blue eyes, crescent-moon emblem, blue
+  spirit-flame mane. ARIYA, a sharp-eyed woman tamer in a leather jacket and
+  backwards cap, partnered with a fire-wolf. The Voltra Grid is a storm-wracked
+  region of black ridges, ruined pylons, and blue-gold lightning.
+
+aspect_ratio: "16:9"
+
+default_params:
+  fps: 24
+  seed: 2050
+
+episodes:
+  - number: 2
+    title: "The Voltra Grid"
+    synopsis: >-
+      Kael, Lunarex, and Ariya cross into the storm-wracked Voltra Grid and find
+      its Synthetic Mythra being corrupted by a lieutenant of the Hollow. As the
+      corrupted lightning-hawk Raizhawk descends, Ariya channels her Dyad Prism to
+      hold the line — and together they free a wild Voltrynx.
+    scenes:
+      - id: scene-01
+        prompt: >-
+          Sweeping aerial establishing shot of the Voltra Grid at dusk: black
+          storm-wracked ridges and ruined metal pylons, forks of blue-gold
+          lightning splitting a bruised sky, charged rain in the air
+        duration_seconds: 7
+        motion: slow aerial push-in
+
+      - id: scene-02
+        prompt: >-
+          Kael, the lunar wolf Lunarex, and Ariya with her fire-wolf stand at the
+          edge of the Voltra Grid, cloaks whipping in the charged wind, lightning
+          flashing on the horizon ahead, grim and determined
+        image_reference: assets/characters/tamer-lunarex-cinematic.png
+        duration_seconds: 6
+        motion: slow push-in
+
+      - id: scene-03
+        prompt: >-
+          A wild VOLTRYNX — a sleek bio-mechanical lightning panther-wolf crackling
+          with blue-gold electricity — crouches snarling among the ruined pylons,
+          sparks arcing off its body
+        image_reference: assets/lore/voltrynx-vs-raizhawk-dyad-prism.png
+        duration_seconds: 6
+        motion: slow reveal
+
+      - id: scene-04
+        prompt: >-
+          A hooded Hollow lieutenant raises a red Corrupted Relic atop a pylon;
+          crimson energy infects the great lightning-hawk RAIZHAWK, whose blue
+          lightning wings flare corrupted red as it screeches and dives
+        image_reference: assets/creatures/raizhawk.png
+        duration_seconds: 6
+        motion: handheld tilt-up
+
+      - id: scene-05
+        prompt: >-
+          ARIYA steps forward and raises a glowing Dyad Prism crystal; her fire-wolf
+          erupts with flame as she channels its power against the storm, fierce and
+          commanding, embers streaming around her
+        image_reference: assets/characters/ariya.png
+        duration_seconds: 6
+        motion: dynamic push-in
+
+      - id: scene-06
+        prompt: >-
+          Kael and the lunar wolf Lunarex leap into the fight, Lunarex unleashing
+          the blue Echo Fang Sigil to clash midair against the corrupted red
+          lightning-hawk Raizhawk, blue and red energy colliding in the rain
+        image_reference: assets/characters/tamer-lunarex-cinematic.png
+        duration_seconds: 6
+        motion: fast tracking
+
+      - id: scene-07
+        prompt: >-
+          The red corruption shatters; Kael extends his blue relic gauntlet toward
+          the freed wild Voltrynx, which steps forward and bonds, blue-gold
+          electricity calming and curling around them both
+        image_reference: assets/lore/voltrynx-vs-raizhawk-dyad-prism.png
+        duration_seconds: 6
+        motion: slow push-in
+
+      - id: scene-08
+        prompt: >-
+          Heroic wide hero shot as the storm clears over the Voltra Grid: Kael with
+          Lunarex, Ariya with her fire-wolf, and the newly bonded Voltrynx standing
+          together on a ridge, dawn light breaking through the parting clouds
+        image_reference: assets/creatures/lunarex-hero.png
+        duration_seconds: 7
+        motion: rising crane shot
