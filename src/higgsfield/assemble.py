@@ -16,8 +16,23 @@ from pathlib import Path
 logger = logging.getLogger("higgsfield")
 
 
+def ffmpeg_exe() -> str | None:
+    """Resolve an ffmpeg binary: prefer one on PATH, else the bundled
+    imageio-ffmpeg build (a pip dependency), so assembly works in minimal
+    environments without a system ffmpeg install."""
+    found = shutil.which("ffmpeg")
+    if found:
+        return found
+    try:
+        import imageio_ffmpeg
+
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
+
+
 def ffmpeg_available() -> bool:
-    return shutil.which("ffmpeg") is not None
+    return ffmpeg_exe() is not None
 
 
 def build_concat_file(clip_paths: Sequence[Path | str], list_path: Path) -> Path:
@@ -31,14 +46,18 @@ def concat_clips(clip_paths: Sequence[Path | str], output_path: Path | str) -> P
     """Concatenate clips into `output_path` and return it."""
     if not clip_paths:
         raise ValueError("No clips to concatenate.")
-    if not ffmpeg_available():
-        raise RuntimeError("ffmpeg not found on PATH; cannot assemble episode.")
+    exe = ffmpeg_exe()
+    if not exe:
+        raise RuntimeError(
+            "ffmpeg not found on PATH and imageio-ffmpeg is not installed; "
+            "cannot assemble episode. Run: pip install imageio-ffmpeg"
+        )
 
     output_path = Path(output_path)
     list_path = output_path.with_suffix(".concat.txt")
     build_concat_file(clip_paths, list_path)
     cmd = [
-        "ffmpeg", "-y",
+        exe, "-y",
         "-f", "concat", "-safe", "0",
         "-i", str(list_path),
         "-c", "copy",
