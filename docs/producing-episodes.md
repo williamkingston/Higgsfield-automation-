@@ -42,6 +42,28 @@ characters/creatures stay on-model across shots.
 | `ModuleNotFoundError: httpx` | Fresh sessions reset the env | `SessionStart` hook runs `scripts/setup_env.sh` |
 | ffmpeg missing for assembly | No system ffmpeg | `assemble.py` falls back to bundled `imageio-ffmpeg` |
 
+## Unlimited, uninterrupted production
+
+Three independent levers — set the first in your account, the other two are built in.
+
+1. **Unlimited generation (credits)** — per-clip credit cost is the only hard cap.
+   Move to a **Higgsfield Unlimited plan** (7-day or 365-day) so renders aren't
+   metered per clip. Nothing in code can lift this — it's an account upgrade.
+2. **Uninterrupted by failures** — the pipeline retries each scene with backoff
+   (`max_attempts`, default 4) and, by default, continues past a scene that gives
+   up (`continue_on_error`). Re-running resumes from `jobs.json` and fills any gap,
+   so no run is lost to a transient API/network hiccup.
+3. **Uninterrupted by the session** — don't render inside an ephemeral chat
+   sandbox. Use one of:
+   - **GitHub Actions** (`.github/workflows/render-episode.yml`) — trigger from the
+     Actions tab; it renders on GitHub's infra to completion and uploads the
+     `episode.mp4` artifact. Add repo secret `HIGGSFIELD_API_KEY`. Best hands-off option.
+   - **Your own machine / server**, detached so it survives disconnects:
+     ```bash
+     nohup python scripts/generate_episode.py series/mythrealm.yaml --all \
+       > render.log 2>&1 &     # runs in the background; tail -f render.log
+     ```
+
 ## Environment hardening (already wired)
 
 - **`.claude/settings.json`** runs `scripts/setup_env.sh` on every session start,

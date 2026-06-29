@@ -1,0 +1,54 @@
+name: Render Episode
+
+# Offloaded, uninterrupted rendering. Runs on GitHub's infrastructure — not an
+# ephemeral chat session — so a long render proceeds to completion on its own.
+# Trigger manually from the Actions tab (or via the API).
+#
+# Requires repository secret HIGGSFIELD_API_KEY (Settings → Secrets → Actions).
+
+on:
+  workflow_dispatch:
+    inputs:
+      series:
+        description: "Path to the series YAML"
+        required: true
+        default: "series/mythrealm.yaml"
+      episode:
+        description: "Episode number (leave blank to render the whole series)"
+        required: false
+        default: ""
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # GitHub's per-job ceiling; resume re-runs continue long shows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev
+          uv pip install imageio-ffmpeg
+
+      - name: Render
+        env:
+          HIGGSFIELD_API_KEY: ${{ secrets.HIGGSFIELD_API_KEY }}
+        run: |
+          if [ -n "${{ inputs.episode }}" ]; then
+            uv run python scripts/generate_episode.py "${{ inputs.series }}" --episode "${{ inputs.episode }}"
+          else
+            uv run python scripts/generate_episode.py "${{ inputs.series }}" --all
+          fi
+
+      - name: Upload episode + clips
+        if: always()  # keep partial output even if a scene fails; re-run resumes
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-output
+          path: output/**
+          if-no-files-found: warn

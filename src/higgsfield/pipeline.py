@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from pathlib import Path
 
 from .assemble import concat_clips, ffmpeg_available
@@ -19,9 +20,21 @@ logger = logging.getLogger("higgsfield")
 
 
 class EpisodePipeline:
-    def __init__(self, backend: Backend, output_dir: Path) -> None:
+    def __init__(
+        self,
+        backend: Backend,
+        output_dir: Path,
+        *,
+        max_attempts: int = 4,
+        continue_on_error: bool = True,
+    ) -> None:
         self._backend = backend
         self._output_dir = Path(output_dir)
+        # For long, unattended runs: retry transient failures with backoff and,
+        # by default, keep rendering the rest of the episode if one scene gives
+        # up — re-running later resumes and fills the gap.
+        self._max_attempts = max(1, max_attempts)
+        self._continue_on_error = continue_on_error
 
     def generate_episode(self, series: Series, episode: Episode) -> Path:
         """Generate every scene in an episode and return the manifest path."""
@@ -41,7 +54,7 @@ class EpisodePipeline:
             if done and _clip_path(ep_dir, scene).exists():
                 logger.info("Scene %s already complete; skipping.", scene.id)
                 continue
-            records[scene.id] = self._generate_scene(series, episode, scene, ep_dir)
+            records[scene.id] = self._generate_scene_resilient(series, episode, scene, ep_dir)
             _save_records(ep_dir, records)
 
         combined = self._assemble(episode, ep_dir)
@@ -67,6 +80,35 @@ class EpisodePipeline:
         except Exception as exc:  # assembly is best-effort; clips are still on disk.
             logger.warning("Episode assembly failed: %s", exc)
             return None
+
+    def _generate_scene_resilient(
+        self, series: Series, episode: Episode, scene: Scene, ep_dir: Path
+    ) -> dict:
+        """Generate a scene with retry/backoff; never raise on a long run."""
+        last_error: Exception | None = None
+        for attempt in range(1, self._max_attempts + 1):
+            try:
+                return self._generate_scene(series, episode, scene, ep_dir)
+            except Exception as exc:  # noqa: BLE001 - transient API/network/job errors
+                last_error = exc
+                if attempt < self._max_attempts:
+                    backoff = 2 ** attempt  # 2s, 4s, 8s, ...
+                    logger.warning(
+                        "Scene %s attempt %d/%d failed: %s — retrying in %ds",
+                        scene.id, attempt, self._max_attempts, exc, backoff,
+                    )
+                    time.sleep(backoff)
+        logger.error("Scene %s failed after %d attempts: %s", scene.id, self._max_attempts, last_error)
+        if not self._continue_on_error:
+            raise last_error  # type: ignore[misc]
+        return {
+            "scene_id": scene.id,
+            "backend": self._backend.name,
+            "job_id": None,
+            "status": "failed",
+            "error": str(last_error),
+            "clip": None,
+        }
 
     def _generate_scene(
         self, series: Series, episode: Episode, scene: Scene, ep_dir: Path
