@@ -1,0 +1,109 @@
+# MYTHREALM — Episode 1, configured for the LOCAL LTX-Video backend (free, GPU).
+# Same canon/cast as series/mythrealm.yaml; see docs/local-rendering-ltx.md.
+# Run ./setup-ltx.sh first, then export LTX_VIDEO_DIR (or set repo_dir below).
+
+title: "Mythrealm"
+
+backend: ltx
+backend_options:
+  pipeline_config: configs/ltxv-13b-0.9.7-dev.yaml
+  # repo_dir: vendor/LTX-Video                      # or rely on LTX_VIDEO_DIR
+  # python_bin: vendor/LTX-Video/.venv/bin/python   # to skip activating the venv
+
+style: >-
+  Cinematic dark-fantasy creature-saga key-art, dramatic rim lighting, glowing
+  essence energy and drifting sparks, painterly volumetric atmosphere, rich
+  saturated color, epic anime-film energy, film grain
+
+character_bible: >-
+  KAEL, a determined young tamer with tousled brown hair, a worn traveling jacket,
+  and a blue Awakening-Relic gauntlet that glows on his forearm. His bonded Mythra
+  is LUNAREX, a spectral lunar wolf with dark fur, glowing blue eyes, a crescent-moon
+  emblem, and a mane of blue spirit-flame. His rival-ally is ARIYA, a sharp-eyed
+  woman tamer in a leather jacket and backwards cap, partnered with a fire-wolf.
+
+aspect_ratio: "16:9"
+
+default_params:
+  fps: 24
+  seed: 2049
+
+episodes:
+  - number: 1
+    title: "The Awakening Relic"
+    synopsis: >-
+      In the moonlit forests of Lunaris Vale, Kael finds an Awakening Relic and a
+      wild, wary Lunarex. When a Corrupted Tamer of the Hollow tries to seize the
+      wolf by force, Kael chooses to protect it instead — and the first true Bond
+      ignites.
+    scenes:
+      - id: scene-01
+        prompt: >-
+          Sweeping aerial establishing shot of Lunaris Vale at night, moonlit pine
+          forests and glowing standing relic-stones, drifting motes of blue essence
+          light, a vast full moon over distant mountains
+        duration_seconds: 7
+        motion: slow aerial push-in
+
+      - id: scene-02
+        prompt: >-
+          Kael walking alone through the moonlit woods, the blue Awakening-Relic
+          gauntlet on his forearm pulsing softly, alert and searching, breath misting
+          in the cold night air
+        image_reference: assets/characters/tamer-lunarex-cinematic.png
+        duration_seconds: 5
+        motion: tracking follow
+
+      - id: scene-03
+        prompt: >-
+          Close-up of an Awakening Relic embedded in a cracked relic-stone, glowing
+          brilliant blue, Kael's hand reaching toward it as light spills across his
+          awestruck face
+        image_reference: assets/lore/relics-awakening-corrupted-fusion.png
+        duration_seconds: 6
+        motion: slow push-in
+
+      - id: scene-04
+        prompt: >-
+          A wild Lunarex emerging from the shadows between the trees, spectral lunar
+          wolf with glowing blue eyes and a crescent-moon emblem, wary and crouched,
+          blue spirit-flame rippling along its mane
+        image_reference: assets/creatures/lunarex-line.png
+        duration_seconds: 6
+        motion: slow reveal
+
+      - id: scene-05
+        prompt: >-
+          A Corrupted Tamer of the Hollow raising a red Corrupted Relic, sickly
+          crimson chains of energy lashing out to seize the snarling Lunarex, the
+          forest lit hellish red against the blue moonlight
+        image_reference: assets/keyart/villain-ready-the-beasts.png
+        duration_seconds: 6
+        motion: handheld tension
+
+      - id: scene-06
+        prompt: >-
+          Kael leaping between the red chains and Lunarex with his blue relic gauntlet
+          blazing, shattering the corruption in a burst of blue light, fierce
+          protective expression
+        image_reference: assets/keyart/together-became-more.png
+        duration_seconds: 6
+        motion: dynamic push-in
+
+      - id: scene-07
+        prompt: >-
+          The Bond igniting — Kael and Lunarex side by side wreathed in blue essence
+          energy, the crescent-moon Echo Fang Sigil flaring above them, Ariya and her
+          fire-wolf arriving at the treeline behind, impressed
+        image_reference: assets/characters/ariya.png
+        duration_seconds: 6
+        motion: rising crane shot
+
+      - id: scene-08
+        prompt: >-
+          Heroic low-angle hero shot of Kael standing with the fully awakened Lunarex
+          at his side beneath the full moon, blue spirit-flame blazing, the vast
+          world of Mythrealm opening ahead of them
+        image_reference: assets/creatures/lunarex-hero.png
+        duration_seconds: 7
+        motion: slow rising crane
