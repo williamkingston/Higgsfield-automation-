@@ -34,19 +34,12 @@ cp .env.example .env
 
 ## Environment Variables
 
-Add required variables to `.env.example` (never commit real secrets). Expected keys will include:
+Generation runs through the **Higgsfield MCP connector**, authorized per-session
+via OAuth in the agent client — **not** via API keys. So there are normally no
+secrets to set. `requests` is used only to download finished result URLs.
 
-| Variable | Description |
-|---|---|
-| `HIGGSFIELD_API_KEY` | Higgsfield Cloud API key (from https://cloud.higgsfield.ai/api-keys) |
-| `HIGGSFIELD_API_SECRET` | Higgsfield Cloud API secret, paired with the key |
-| `HIGGSFIELD_KEY` | Optional combined `key:secret` value (alternative to the two above) |
-| `HIGGSFIELD_API_BASE` | API base URL (default: `https://platform.higgsfield.ai/v1`) |
-
-> Note: the client (`src/client.py`) targets the Higgsfield Cloud surface
-> (`platform.higgsfield.ai/v1`, key + secret auth), ported from OpenMontage.
-> See `docs/openmontage-integration.md` for the rationale and the open question
-> about which API surface your account uses.
+See `docs/openmontage-integration.md` for why the earlier REST/key approach was
+replaced after live validation showed its model ids didn't match the real catalog.
 
 ## Project Structure
 
@@ -55,12 +48,15 @@ Update this section as directories are created:
 ```
 .
 ├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── requirements.txt     # Runtime dependencies
+├── .env.example         # Env template (connector uses OAuth; usually empty)
+├── requirements.txt     # Runtime dependencies (requests, for downloads)
 ├── README.md            # User-facing documentation
 ├── src/
-│   └── client.py        # Single Higgsfield API client (submit/poll/download)
-├── tests/               # Test suite (pytest)
+│   ├── models.py        # Verified Higgsfield model registry
+│   ├── client.py        # HiggsfieldConnectorClient (transport-injected)
+│   └── batch.py         # Resumable batch runner
+├── scripts/run_batch.py # Validate jobs → emit connector payloads
+├── tests/               # Test suite (pytest; fake invoker, no network)
 ├── docs/                # Additional documentation
 └── .agents/skills/      # Vendored agent skills (impeccable, taste, OpenMontage, …)
 ```
@@ -116,9 +112,14 @@ Document the CI pipeline here once configured. Common things to capture:
 
 Key things to know when implementing against Higgsfield:
 
-- Authentication uses a bearer token (`Authorization: Bearer <HIGGSFIELD_API_KEY>`).
-- Video generation jobs are asynchronous — poll the job status endpoint until `status` is `completed` or `failed`.
-- Always check `job.status` before downloading output assets.
+- Generation goes through the Higgsfield MCP connector (`generate_video`,
+  `job_display`, `show_generations`). `src/client.py` builds/validates the
+  requests; the connector call is injected via an `invoker` (agent-driven).
+- Use real catalog model ids (`seedance_2_0`, `kling3_0`, `veo3_1`, …) from
+  `src/models.py`. Dotted names like `seedance_2.0` are invalid.
+- `generate_video` with `get_cost: true` preflights credits **without** creating
+  a job — use it before spending.
+- Video generation jobs are asynchronous — poll until `status` is terminal.
 - Store job IDs persistently so jobs can be recovered after a process restart.
 
 ## Git Workflow

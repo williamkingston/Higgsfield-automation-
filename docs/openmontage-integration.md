@@ -6,11 +6,41 @@ pipeline could plug in.
 
 ## TL;DR
 
-OpenMontage already ships a working **Higgsfield Cloud API** client
-(`tools/video/higgsfield_video.py`). This repo's first concrete step
-(`src/client.py`) is a trimmed, standalone port of it that matches the
-conventions in `CLAUDE.md`: a single client module, async submit → poll →
-download, and exponential backoff on `429`.
+The client was first ported from OpenMontage's REST tool
+(`tools/video/higgsfield_video.py`), then — after live validation — **pivoted to
+the Higgsfield MCP connector**. `src/client.py` now builds and validates
+`generate_video` requests against the real model catalog (`src/models.py`) and
+delegates the actual call to an injected transport.
+
+## Update (2026-06-16): validated, then pivoted to the connector
+
+Live validation against the real Higgsfield account (605.5 credits, "ultimate")
+surfaced a decisive problem with the ported REST approach:
+
+- The REST surface (`platform.higgsfield.ai/v1`) is **blocked by this
+  environment's network policy** (403 `host_not_allowed`) and no REST creds exist.
+- The model ids OpenMontage hard-coded **do not match** the real catalog:
+  `seedance_2.0`→`seedance_2_0`, `kling_3.0`→`kling3_0`, `veo_3.1`→`veo3_1`, and
+  `sora_2` / `soul_cinema` **don't exist at all**.
+
+So the client was rebuilt on the **MCP connector**, which is authorized and
+proven live. Verified facts baked into the code:
+
+- Request envelope is `{"params": {"model": ..., "prompt": ..., ...}}`.
+- Real model ids come from the connector's `models_explore` catalog
+  (`src/models.py`).
+- `generate_video` with `get_cost: true` preflights credits **without** creating
+  a job; response is `{"cost": {"credits": N}}`. A 5s `seedance_2_0_mini` clip = 12.5 credits.
+
+Because an MCP connector can't be called from plain Python, `src/client.py` is
+**transport-injected**: the agent (or host bridge) supplies the `invoker`; the
+Python owns request-building, validation, cost preflight, job tracking, and
+download — all unit-tested with a fake invoker.
+
+### Original port (historical)
+
+OpenMontage's `higgsfield_video` tool talks to a Higgsfield Cloud REST API and
+was the starting point; the notes below describe that surface.
 
 ## The linchpin: OpenMontage is already a Higgsfield consumer
 

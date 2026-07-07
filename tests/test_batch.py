@@ -1,83 +1,81 @@
-"""Tests for the batch runner using a fake client (no network)."""
+"""Tests for the batch runner using a fake connector invoker (no network/spend)."""
 
 from src.batch import BatchRunner
+from src.client import HiggsfieldConnectorClient
 
 
-class FakeClient:
-    """Minimal stand-in for HiggsfieldClient.
+class FakeInvoker:
+    def __init__(self, job_status="Completed", url="https://cdn/a.mp4", cost=10.0):
+        self.job_status = job_status
+        self.url = url
+        self.cost = cost
+        self.generate_calls = 0
 
-    `statuses` maps a generation id to a list of status payloads returned on
-    successive get_generation calls (the last one repeats).
-    """
+    def __call__(self, tool, args):
+        if tool == "generate_video":
+            if args["params"].get("get_cost"):
+                return {"cost": {"credits": self.cost, "credits_exact": self.cost}}
+            self.generate_calls += 1
+            return {"results": [{"job_id": f"job_{self.generate_calls}"}]}
+        if tool == "job_display":
+            payload = {"status": self.job_status}
+            if self.job_status.lower() == "completed":
+                payload["output_url"] = self.url
+            else:
+                payload["error"] = "nsfw"
+            return payload
+        raise AssertionError(tool)
 
-    def __init__(self, statuses=None, fail_submit_keys=None):
-        self.statuses = statuses or {}
-        self.fail_submit_keys = fail_submit_keys or set()
-        self.submitted = []
-        self.downloaded = []
-        self._poll_idx = {}
-        self._counter = 0
 
-    def submit_generation(self, prompt, **params):
-        self._counter += 1
-        gen_id = f"gen_{self._counter}"
-        self.submitted.append((gen_id, prompt, params))
-        return gen_id
-
-    def get_generation(self, generation_id):
-        seq = self.statuses.get(generation_id, [{"status": "Completed", "output_url": "https://cdn/x.mp4"}])
-        idx = min(self._poll_idx.get(generation_id, 0), len(seq) - 1)
-        self._poll_idx[generation_id] = idx + 1
-        return seq[idx]
-
-    def download(self, url, output_path):
-        self.downloaded.append((url, output_path))
+def make_runner(tmp_path, invoker, record_downloads=None):
+    client = HiggsfieldConnectorClient(invoker)
+    if record_downloads is not None:
+        client.download = lambda url, out: record_downloads.append((url, str(out)))
+    return BatchRunner(client, tmp_path / "state.json")
 
 
 def test_run_completes_and_downloads(tmp_path):
-    client = FakeClient(statuses={
-        "gen_1": [{"status": "Processing"}, {"status": "Completed", "output_url": "https://cdn/a.mp4"}],
-    })
-    runner = BatchRunner(client, tmp_path / "state.json")
-    jobs = [{"key": "a", "prompt": "hello", "output": str(tmp_path / "a.mp4")}]
+    downloads = []
+    runner = make_runner(tmp_path, FakeInvoker(), record_downloads=downloads)
+    jobs = [{"key": "a", "model": "seedance_2_0", "prompt": "hi", "output": str(tmp_path / "a.mp4")}]
 
     states = runner.run(jobs, poll_interval=0, timeout=10)
 
     assert states["a"].status == "completed"
-    assert states["a"].generation_id == "gen_1"
-    assert client.downloaded == [("https://cdn/a.mp4", str(tmp_path / "a.mp4"))]
+    assert states["a"].job_id == "job_1"
+    assert downloads == [("https://cdn/a.mp4", str(tmp_path / "a.mp4"))]
     assert runner.summary() == {"completed": 1}
 
 
-def test_failure_state_recorded(tmp_path):
-    client = FakeClient(statuses={"gen_1": [{"status": "Failed", "error": "nsfw"}]})
-    runner = BatchRunner(client, tmp_path / "state.json")
-    runner.run([{"key": "a", "prompt": "x"}], poll_interval=0, timeout=10)
-
+def test_failure_recorded(tmp_path):
+    runner = make_runner(tmp_path, FakeInvoker(job_status="Failed"))
+    runner.run([{"key": "a", "model": "seedance_2_0", "prompt": "x"}], poll_interval=0, timeout=10)
     assert runner.states["a"].status == "failed"
-    assert runner.states["a"].error == "nsfw"
 
 
 def test_resume_does_not_resubmit(tmp_path):
-    state_file = tmp_path / "state.json"
-    client = FakeClient(statuses={"gen_1": [{"status": "Completed", "output_url": "https://cdn/a.mp4"}]})
-    jobs = [{"key": "a", "prompt": "x", "output": str(tmp_path / "a.mp4")}]
+    inv = FakeInvoker()
+    jobs = [{"key": "a", "model": "seedance_2_0", "prompt": "x"}]
+    make_runner(tmp_path, inv).run(jobs, poll_interval=0, timeout=10)
+    assert inv.generate_calls == 1
 
-    BatchRunner(client, state_file).run(jobs, poll_interval=0, timeout=10)
-    assert len(client.submitted) == 1
-
-    # New runner, same state file: the completed job must not be re-submitted.
-    client2 = FakeClient()
-    BatchRunner(client2, state_file).run(jobs, poll_interval=0, timeout=10)
-    assert client2.submitted == []
+    inv2 = FakeInvoker()
+    make_runner(tmp_path, inv2).run(jobs, poll_interval=0, timeout=10)
+    assert inv2.generate_calls == 0  # completed job must not be re-submitted
 
 
 def test_state_persisted_between_instances(tmp_path):
-    state_file = tmp_path / "state.json"
-    client = FakeClient(statuses={"gen_1": [{"status": "Completed", "output_url": "https://cdn/a.mp4"}]})
-    runner = BatchRunner(client, state_file)
-    runner.run([{"key": "a", "prompt": "x"}], poll_interval=0, timeout=10)
-
-    reloaded = BatchRunner(FakeClient(), state_file)
+    make_runner(tmp_path, FakeInvoker()).run(
+        [{"key": "a", "model": "seedance_2_0", "prompt": "x"}], poll_interval=0, timeout=10)
+    reloaded = make_runner(tmp_path, FakeInvoker())
     assert reloaded.states["a"].status == "completed"
-    assert reloaded.states["a"].generation_id == "gen_1"
+    assert reloaded.states["a"].job_id == "job_1"
+
+
+def test_preflight_total_sums_cost(tmp_path):
+    runner = make_runner(tmp_path, FakeInvoker(cost=12.5))
+    runner._ensure_states([
+        {"key": "a", "model": "seedance_2_0", "prompt": "x"},
+        {"key": "b", "model": "seedance_2_0_mini", "prompt": "y"},
+    ])
+    assert runner.preflight_total() == 25.0

@@ -4,81 +4,79 @@ Automates video generation workflows on the [Higgsfield AI](https://higgsfield.a
 platform — programmatic generation, batch pipelines, and orchestration of
 rendering jobs.
 
+Generation runs through the **Higgsfield MCP connector** (verified live against
+the real model catalog). This repo is the pure-Python layer that builds and
+validates connector requests, preflights cost, and tracks jobs — the connector
+call itself is supplied by the agent/host (see Architecture).
+
 ## Install
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt        # add -r requirements-dev.txt for tests
-
-cp .env.example .env                   # then fill in your credentials
 ```
 
-## Configure
-
-Get a key + secret from <https://cloud.higgsfield.ai/api-keys> and set them in
-`.env`:
-
-| Variable | Description |
-|---|---|
-| `HIGGSFIELD_API_KEY` | Higgsfield Cloud API key |
-| `HIGGSFIELD_API_SECRET` | Higgsfield Cloud API secret |
-| `HIGGSFIELD_KEY` | Optional combined `key:secret` (alternative to the two above) |
-| `HIGGSFIELD_API_BASE` | API base URL (default `https://platform.higgsfield.ai/v1`) |
+No API keys are required: the Higgsfield connector is authorized per-session via
+OAuth in your agent client, not via secrets in `.env`.
 
 ## Usage
 
-### Single generation
+The client is **transport-injected** — you pass an `invoker(tool, args)` that
+performs the actual connector call. In an agent session that forwards to the
+Higgsfield MCP tools; in tests it's a fake.
+
+### Preflight cost (free — no job created)
 
 ```python
-from src import HiggsfieldClient
+from src import HiggsfieldConnectorClient
 
-client = HiggsfieldClient.from_env()
-
-result = client.generate_video(
-    "a neon city skyline at night, cinematic",
-    model="seedance_2.0",
-    duration=5,
-    output_path="output/city.mp4",
-)
-print(result.status, result.output_url)
+client = HiggsfieldConnectorClient(invoker)   # invoker bridges the MCP connector
+credits = client.preflight_cost("seedance_2_0_mini", "a calm ocean", duration=5)
 ```
 
-### Restart-safe (submit now, await later)
+### Submit + track (restart-safe)
 
 ```python
-gen_id = client.submit_generation("a forest spirit, ghibli style")
-# ... persist gen_id somewhere durable ...
-result = client.wait_for_generation(gen_id)
+job_ids = client.submit("seedance_2_0", "a neon city at night", duration=5)
+# ... persist job_ids somewhere durable ...
+result = client.wait_for_job(job_ids[0])
 if result.succeeded:
-    client.download(result.output_url, "output/spirit.mp4")
+    client.download(result.output_url, "output/city.mp4")
 ```
+
+Valid model ids live in [`src/models.py`](src/models.py) (e.g. `seedance_2_0`,
+`seedance_2_0_mini`, `kling3_0`, `kling3_0_turbo`, `veo3_1`). Passing an unknown
+id raises with suggestions.
 
 ### Batch
 
-Describe jobs in a JSON file (see [`jobs.example.json`](jobs.example.json)), then:
+Describe jobs in a JSON file (see [`jobs.example.json`](jobs.example.json)).
+`scripts/run_batch.py` validates them against the catalog and emits the exact
+`generate_video` payloads to submit through the connector:
 
 ```bash
-python scripts/run_batch.py jobs.example.json --state pipeline/batch_state.json
+python scripts/run_batch.py jobs.example.json
 ```
 
-The runner persists each job's generation id to the state file. Re-running with
-the same state file **resumes** — completed jobs are skipped and in-flight jobs
-are recovered by id rather than re-submitted.
+`src/batch.py`'s `BatchRunner` persists each job id to a state file; re-running
+with the same state file **resumes** — completed jobs are skipped and in-flight
+jobs are recovered by id rather than re-submitted.
 
 ## Architecture
 
-- **`src/client.py`** — the single Higgsfield API client. All API calls go
-  through it (async submit → poll → download, exponential backoff on `429`,
-  request-id logging, never logs secrets).
+- **`src/models.py`** — verified model registry (real ids, durations, aspect
+  ratios) sourced from the connector's live catalog.
+- **`src/client.py`** — `HiggsfieldConnectorClient`: builds/validates
+  `generate_video` requests, preflights cost, submits, polls, downloads. The
+  connector call is injected (`invoker`), so it's fully testable.
 - **`src/batch.py`** — resumable batch runner over a JSON state file.
-- **`scripts/run_batch.py`** — CLI entry point for batches.
+- **`scripts/run_batch.py`** — validates a jobs file and emits connector payloads.
 - **`.agents/skills/`** — vendored agent skills (impeccable, taste-skills,
   OpenMontage AI-video skills) for AI-assisted development.
 
-See [`docs/openmontage-integration.md`](docs/openmontage-integration.md) for how
-this client relates to the [OpenMontage](https://github.com/calesthio/OpenMontage)
-pipeline it was ported from.
+See [`docs/openmontage-integration.md`](docs/openmontage-integration.md) for the
+background, including why the earlier REST approach was replaced.
 
 ## Tests
 
@@ -87,4 +85,5 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-Tests mock all HTTP — they never hit the network or require credentials.
+Tests use a fake invoker — they never hit the network, spend credits, or need
+credentials.

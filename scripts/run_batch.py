@@ -1,57 +1,60 @@
 #!/usr/bin/env python3
-"""CLI: run a batch of Higgsfield generation jobs from a JSON file.
+"""Validate a batch of Higgsfield jobs and emit the connector request payloads.
+
+Generation runs through the Higgsfield **MCP connector**, which is agent-driven
+(a standalone script can't call an MCP tool). So this CLI does the pure-Python
+part: it validates every job against the real model catalog and prints the exact
+`generate_video` payloads an agent would submit. Feed the jobs file to an agent
+session (or a host that bridges the connector) to actually run them.
 
 Usage:
-    python scripts/run_batch.py jobs.json [--state pipeline/batch_state.json]
-
-The jobs file is a list of objects:
-    [
-      {"key": "intro", "prompt": "a neon city at night",
-       "output": "output/intro.mp4", "params": {"model": "seedance_2.0", "duration": 5}}
-    ]
-
-Re-running with the same state file resumes: completed jobs are skipped and
-in-flight jobs are recovered by id.
+    python scripts/run_batch.py jobs.example.json
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import logging
 import sys
 from pathlib import Path
 
-# Allow running as a standalone script (python scripts/run_batch.py ...).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.batch import BatchRunner
-from src.client import HiggsfieldClient
+from src.client import HiggsfieldConnectorClient, HiggsfieldValidationError
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a batch of Higgsfield jobs.")
+    parser = argparse.ArgumentParser(description="Validate jobs and emit connector payloads.")
     parser.add_argument("jobs", help="Path to a JSON file describing the jobs.")
-    parser.add_argument("--state", default="pipeline/batch_state.json",
-                        help="Where to persist job state (default: pipeline/batch_state.json).")
-    parser.add_argument("--poll-interval", type=float, default=5.0)
-    parser.add_argument("--timeout", type=float, default=1800.0)
     args = parser.parse_args()
-
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
     jobs = json.loads(Path(args.jobs).read_text())
     if not isinstance(jobs, list):
         print("error: jobs file must contain a JSON list", file=sys.stderr)
         return 2
 
-    client = HiggsfieldClient.from_env()
-    runner = BatchRunner(client, args.state)
-    runner.run(jobs, poll_interval=args.poll_interval, timeout=args.timeout)
+    # A no-op invoker: we only use build_request (no calls are made).
+    client = HiggsfieldConnectorClient(invoker=lambda tool, args: {})
 
-    summary = runner.summary()
-    print(f"Batch finished: {summary}")
-    return 1 if summary.get("failed") else 0
+    payloads, errors = [], []
+    for job in jobs:
+        try:
+            payload = client.build_request(
+                job.get("model", "seedance_2_0"),
+                job.get("prompt"),
+                **job.get("params", {}),
+            )
+            payloads.append({"key": job.get("key"), "output": job.get("output"), **payload})
+        except HiggsfieldValidationError as exc:
+            errors.append({"key": job.get("key"), "error": str(exc)})
+
+    print(json.dumps({"generate_video_payloads": payloads, "errors": errors}, indent=2))
+    if errors:
+        print(f"\n{len(errors)} job(s) failed validation.", file=sys.stderr)
+        return 1
+    print(f"\n{len(payloads)} job(s) validated. Submit these via the Higgsfield connector.",
+          file=sys.stderr)
+    return 0
 
 
 if __name__ == "__main__":
