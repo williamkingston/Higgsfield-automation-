@@ -16,7 +16,10 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
 offline test suite. On top of it sits an episodic video pipeline (`models.py`,
 `backends.py`, `pipeline.py`, `assemble.py`) that turns a YAML-defined series
-into per-scene generation jobs. Update this file as the codebase grows.
+into per-scene generation jobs. `src/apilayer/` adds clients for APILayer's
+family of data/enrichment APIs (weather, geocoding, screenshots, ...) that can
+feed real-world context into that pipeline's scenes (see "APILayer Clients"
+below). Update this file as the codebase grows.
 
 Alongside the Python pipeline, the repo also carries a set of Claude Code
 **agent skills** under `.agents/skills/` (see "Agent Skills" below) used when
@@ -71,6 +74,7 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 | `LOVART_SECRET_KEY` | Lovart secret key (`sk_...`); used to HMAC-sign requests, sensitive, never log or commit |
 | `LOVART_API_BASE` | Lovart API base URL (default: `https://lgw.lovart.ai`) |
 | `LOVART_API_PREFIX` | Lovart OpenAPI path prefix (default: `/v1/openapi`) |
+| `{PRODUCT}_ACCESS_KEY` | Access key for one APILayer product, e.g. `WEATHERSTACK_ACCESS_KEY` (see `.env.example` for the full list and "APILayer Clients" below) |
 
 ### Lovart client
 
@@ -92,6 +96,42 @@ mode (`query_mode`, `set_mode`).
 - `scripts/lovart_generate.py` — single-prompt example.
 - `scripts/lovart_batch.py` — batch-generate from a `.txt`/`.csv` of prompts,
   writing a JSON manifest of results.
+
+## APILayer Clients
+
+[APILayer](https://apilayer.com) publishes dozens of independent single-purpose
+REST APIs (weather, currency, geocoding, screenshots, validation, ...) that all
+share the same two conventions: an `access_key` query parameter for auth, and a
+JSON failure envelope of `{"success": false, "error": {"code", "type", "info"}}`.
+`src/apilayer/base.py` implements that shared contract exactly once
+(`APILayerClient`/`APILayerConfig`) — retries with backoff on `429`/`5xx`,
+error parsing — so every product module only declares its base URL and typed
+endpoint methods. Each product is signed up for and billed independently, so
+each client reads its own `{SERVICE}_ACCESS_KEY` / `{SERVICE}_API_BASE` env
+vars (see `.env.example`) rather than sharing one key.
+
+Product clients, one module each under `src/apilayer/`: `weatherstack`
+(weather), `aviationstack` (flights), `fixer` / `currencylayer` (FX rates),
+`marketstack` (stocks), `positionstack` (geocoding), `ipstack` (IP
+geolocation), `vatlayer` (VAT validation), `mailboxlayer` (email validation),
+`numverify` (phone validation), `userstack` (user-agent detection), `serpstack`
+(search results), `scrapestack` (web scraping proxy), `screenshotlayer`
+(website screenshots), `giflayer` (video → GIF), `pdflayer` (HTML/URL → PDF),
+`coinlayer` (crypto rates), `mediastack` (news), `streetlayer` (address
+autocomplete/validation).
+
+Most methods return the parsed JSON body via `request()`. A few return raw
+bytes/text via `request_raw()` for products whose success response isn't JSON
+(`screenshotlayer.capture`, `pdflayer.convert_url`/`convert_html`,
+`scrapestack.scrape`).
+
+`src/apilayer/enrichment.py` is the glue to the episodic pipeline: it's **not**
+wired into `EpisodePipeline` automatically — call `enrich_with_weather` /
+`enrich_with_site_capture` (or the generic `attach_enrichment`) explicitly
+before generation for scenes that should reflect external data. Results land
+in `scene.params["enrichment"]`, available to prompt templates. Add more
+`enrich_with_*` helpers the same way as new products are wired into scenes;
+don't build a generic dispatcher for all 19 clients up front.
 
 ## Project Structure
 
@@ -117,6 +157,7 @@ mode (`query_mode`, `set_mode`).
 │   ├── pipeline.py            # EpisodePipeline — generate + persist + assemble
 │   └── assemble.py            # ffmpeg concat of an episode's clips
 ├── src/lovart/                # LovartClient — HMAC-signed chat-thread generation (see below)
+├── src/apilayer/              # APILayer product clients — see "APILayer Clients" below
 ├── series/                    # Episode/series definitions (YAML) + the Mythrealm show bible
 ├── assets/                    # Reference art for the Mythrealm series (characters/, creatures/, keyart/, lore/)
 ├── tests/                     # Test suite (offline, no API key needed)
