@@ -16,7 +16,16 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
 offline test suite. On top of it sits an episodic video pipeline (`models.py`,
 `backends.py`, `pipeline.py`, `assemble.py`) that turns a YAML-defined series
-into per-scene generation jobs. Update this file as the codebase grows.
+into per-scene generation jobs. `src/apilayer/` adds clients for APILayer's
+family of data/enrichment APIs (weather, geocoding, screenshots, ...) that can
+feed real-world context into that pipeline's scenes (see "APILayer Clients"
+below). Update this file as the codebase grows.
+
+Alongside the Python pipeline, the repo also carries a set of Claude Code
+**agent skills** under `.agents/skills/` (see "Agent Skills" below) used when
+an AI assistant works in this repo — for authoring HyperFrames/GSAP video
+compositions, scraping reference material, and reviewing UI/animation polish.
+These are Markdown instructions and reference docs, not application code.
 
 ## Development Setup
 
@@ -65,6 +74,7 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 | `LOVART_SECRET_KEY` | Lovart secret key (`sk_...`); used to HMAC-sign requests, sensitive, never log or commit |
 | `LOVART_API_BASE` | Lovart API base URL (default: `https://lgw.lovart.ai`) |
 | `LOVART_API_PREFIX` | Lovart OpenAPI path prefix (default: `/v1/openapi`) |
+| `{PRODUCT}_ACCESS_KEY` | Access key for one APILayer product, e.g. `WEATHERSTACK_ACCESS_KEY` (see `.env.example` for the full list and "APILayer Clients" below) |
 
 ### Lovart client
 
@@ -87,16 +97,57 @@ mode (`query_mode`, `set_mode`).
 - `scripts/lovart_batch.py` — batch-generate from a `.txt`/`.csv` of prompts,
   writing a JSON manifest of results.
 
+## APILayer Clients
+
+[APILayer](https://apilayer.com) publishes dozens of independent single-purpose
+REST APIs (weather, currency, geocoding, screenshots, validation, ...) that all
+share the same two conventions: an `access_key` query parameter for auth, and a
+JSON failure envelope of `{"success": false, "error": {"code", "type", "info"}}`.
+`src/apilayer/base.py` implements that shared contract exactly once
+(`APILayerClient`/`APILayerConfig`) — retries with backoff on `429`/`5xx`,
+error parsing — so every product module only declares its base URL and typed
+endpoint methods. Each product is signed up for and billed independently, so
+each client reads its own `{SERVICE}_ACCESS_KEY` / `{SERVICE}_API_BASE` env
+vars (see `.env.example`) rather than sharing one key.
+
+Product clients, one module each under `src/apilayer/`: `weatherstack`
+(weather), `aviationstack` (flights), `fixer` / `currencylayer` (FX rates),
+`marketstack` (stocks), `positionstack` (geocoding), `ipstack` (IP
+geolocation), `vatlayer` (VAT validation), `mailboxlayer` (email validation),
+`numverify` (phone validation), `userstack` (user-agent detection), `serpstack`
+(search results), `scrapestack` (web scraping proxy), `screenshotlayer`
+(website screenshots), `giflayer` (video → GIF), `pdflayer` (HTML/URL → PDF),
+`coinlayer` (crypto rates), `mediastack` (news), `streetlayer` (address
+autocomplete/validation).
+
+Most methods return the parsed JSON body via `request()`. A few return raw
+bytes/text via `request_raw()` for products whose success response isn't JSON
+(`screenshotlayer.capture`, `pdflayer.convert_url`/`convert_html`,
+`scrapestack.scrape`).
+
+`src/apilayer/enrichment.py` is the glue to the episodic pipeline: it's **not**
+wired into `EpisodePipeline` automatically — call `enrich_with_weather` /
+`enrich_with_site_capture` (or the generic `attach_enrichment`) explicitly
+before generation for scenes that should reflect external data. Results land
+in `scene.params["enrichment"]`, available to prompt templates. Add more
+`enrich_with_*` helpers the same way as new products are wired into scenes;
+don't build a generic dispatcher for all 19 clients up front.
+
 ## Project Structure
 
 ```
 .
 ├── CLAUDE.md                  # This file
+├── README.md                  # User-facing documentation
 ├── pyproject.toml             # Project metadata & dependencies (uv-managed)
 ├── uv.lock                    # Pinned dependency versions (committed)
 ├── .python-version            # Python version pin for uv
 ├── setup.sh                   # Bootstrap script (installs uv + syncs env)
+├── setup-ltx.sh               # Clones/installs Lightricks/LTX-Video for the local `ltx` backend (needs an NVIDIA GPU)
+├── setup-hyperframes.sh       # Installs the HyperFrames skill set into another repo's .agents/skills/
+├── skills-lock.json           # Tracks vendored agent skills (source repo + content hash)
 ├── .env.example               # Environment variable template
+├── .github/workflows/ci.yml   # CI: uv sync, ruff check, pytest
 ├── src/higgsfield/            # The Higgsfield package
 │   ├── client.py              # HiggsfieldClient — the single API entry point
 │   ├── config.py              # HiggsfieldConfig.from_env() + resolve_output_dir()
@@ -105,11 +156,17 @@ mode (`query_mode`, `set_mode`).
 │   ├── backends.py            # Higgsfield (API) and LTX-Video (local) backends
 │   ├── pipeline.py            # EpisodePipeline — generate + persist + assemble
 │   └── assemble.py            # ffmpeg concat of an episode's clips
-├── series/                    # Example series definitions (YAML)
+├── src/lovart/                # LovartClient — HMAC-signed chat-thread generation (see below)
+├── src/apilayer/              # APILayer product clients — see "APILayer Clients" below
+├── series/                    # Episode/series definitions (YAML) + the Mythrealm show bible
+├── assets/                    # Reference art for the Mythrealm series (characters/, creatures/, keyart/, lore/)
 ├── tests/                     # Test suite (offline, no API key needed)
-└── scripts/
-    ├── generate_video.py      # Runnable example: submit one job and wait
-    └── generate_episode.py    # Generate a full episode from a series YAML
+├── scripts/
+│   ├── generate_video.py      # Runnable example: submit one job and wait
+│   ├── generate_episode.py    # Generate a full episode from a series YAML
+│   ├── lovart_generate.py     # Single-prompt Lovart example
+│   └── lovart_batch.py        # Batch-generate from a .txt/.csv of prompts
+└── .agents/skills/            # Claude Code agent skills — see "Agent Skills" below
 ```
 
 All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
@@ -117,6 +174,41 @@ bearer auth, exponential backoff on `429`/`5xx` (honoring `Retry-After`),
 request-id logging, and the submit-then-poll job pattern via
 `create_generation` → `wait_for_job` (or the combined `generate_and_wait`). The
 episodic pipeline builds on this client through the `HiggsfieldBackend`.
+
+## Mythrealm Series & Assets
+
+`series/mythrealm-bible.md` is the canon source of truth for **Mythrealm**, a
+creature-bonding saga (young "Tamers" bonding with "Mythra" creatures via
+Relics) used as the example content for the episodic pipeline. Episode scripts
+in `series/*.yaml` (e.g. `mythrealm.yaml`, `the-emberwright.yaml`) draw their
+world, cast, and creature designs from the bible. Visual references live in
+`assets/characters/`, `assets/creatures/`, `assets/keyart/`, and
+`assets/lore/` — treat these as reference material for prompts, not code.
+
+## Agent Skills
+
+`.agents/skills/` holds Claude Code skills used when an AI assistant works in
+this repo (or is installed elsewhere via `setup-hyperframes.sh`):
+
+- `hyperframes` — author HyperFrames HTML/GSAP video compositions: timing,
+  captions, transitions, audio-reactive animation, house style and palettes.
+- `gsap` — GSAP animation reference (tweens, timelines, easing) scoped to the
+  HyperFrames runtime contract.
+- `remotion-to-hyperframes` — migrates existing Remotion (React) video
+  projects into HyperFrames, with an SSIM-graded tiered test corpus guarding
+  against lossy translations.
+- `website-to-hyperframes` — a 7-step pipeline that captures a website and
+  produces a HyperFrames promo/product video from it; ships a bundled SFX
+  library under `assets/sfx/`.
+- `emil-design-eng` — UI/animation polish review philosophy (vendored from
+  `emilkowalski/skill`).
+- `just-scrape` — web search/scrape/crawl/monitor via the ScrapeGraph AI CLI
+  (vendored from `scrapegraphai/just-scrape`; needs the `just-scrape` CLI and
+  `SGAI_API_KEY`).
+
+`emil-design-eng` and `just-scrape` are vendored via `npx skills add` and
+tracked in `skills-lock.json` (source repo, path, content hash) — prefer
+updating at the source and re-pulling over editing them directly.
 
 ## Key Conventions
 
