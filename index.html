@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>vyrn.</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    overflow: hidden;
+    font-family: "Suisse Intl", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #000;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #stage {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 1440px;
+    height: 900px;
+    background: #ffffff;
+    overflow: hidden;
+    transform-origin: bottom center;
+    transform: translateX(-50%) scale(1);
+  }
+
+  .model {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1200px;
+    height: 2980px;
+    transform-origin: 0 0;
+    will-change: transform;
+    cursor: pointer;
+  }
+
+  .model-inner {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transition: opacity 0.45s ease;
+    overflow: hidden;
+  }
+
+  .model video {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 109.29%;
+    width: auto;
+    transform: translate(-50%, -4%);
+    transform-origin: top center;
+    object-fit: cover;
+  }
+
+  .model .fallback-fill {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #EDE6E2;
+  }
+
+  /* Logo */
+  #logo {
+    position: fixed;
+    left: 12px;
+    top: 16px;
+    width: 161.87px;
+    height: 71px;
+    z-index: 100000;
+    transform-origin: top left;
+    pointer-events: none;
+  }
+  #logo svg { width: 100%; height: 100%; display: block; }
+
+  /* Bottom nav */
+  #navbar {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 100001;
+  }
+  .pill {
+    background: rgba(0,0,0,0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 200px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+  }
+  .pill-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    justify-content: center;
+  }
+  .pill-icon svg { width: 14px; height: 14px; }
+  .pill-links {
+    width: 600px;
+    padding: 6px 24px;
+    justify-content: space-between;
+  }
+  .pill-links a {
+    text-decoration: none;
+    color: #000;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Detail panels */
+  .detail-panel {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100001;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    color: #000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .detail-panel.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  #panel-left {
+    left: 24px;
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: left;
+  }
+  #panel-left .product-name { }
+  #panel-left .product-desc {
+    line-height: 1.45;
+    font-weight: 600;
+  }
+  #panel-left .more-details {
+    text-decoration: underline;
+    cursor: default;
+  }
+
+  #panel-right {
+    right: 24px;
+    width: 154px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: right;
+    align-items: flex-end;
+  }
+  #panel-right .wishlist {
+    text-decoration: underline;
+    cursor: default;
+  }
+  .size-row {
+    display: flex;
+    gap: 15px;
+  }
+  .size-row span.selected {
+    text-decoration: underline;
+  }
+  .price {
+    font-family: "Instrument Serif", "Didot", "Bodoni 72", "Times New Roman", Times, serif;
+    font-variant-numeric: lining-nums;
+    font-feature-settings: "lnum" 1, "onum" 0;
+    font-size: 40px;
+    letter-spacing: -0.8px;
+    line-height: 1;
+    text-transform: none;
+  }
+  .add-to-cart {
+    width: 107px;
+    height: 32px;
+    border-radius: 23px;
+    background: #000;
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    font-family: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .model { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="logo">
+  <svg preserveAspectRatio="none" viewBox="0 0 161.87 71" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M156.75 51.699C155.305 51.699 154.058 51.2395 153.008 50.3204C152.023 49.3356 151.53 48.0555 151.53 46.4799C151.53 44.9699 152.023 43.7554 153.008 42.8363C154.058 41.8516 155.305 41.3592 156.75 41.3592C158.063 41.3592 159.244 41.8516 160.295 42.8363C161.345 43.7554 161.87 44.9699 161.87 46.4799C161.87 48.0555 161.345 49.3356 160.295 50.3204C159.244 51.2395 158.063 51.699 156.75 51.699Z" fill="black"/>
+    <path d="M104.881 50.8127C103.896 50.8127 103.403 50.4517 103.403 49.7295C103.403 49.1387 103.83 48.7448 104.684 48.5478L105.865 48.3509C107.244 48.0883 108.13 47.6944 108.524 47.1692C108.984 46.5784 109.213 45.5936 109.213 44.215V11.1276C109.213 9.9459 109.016 9.15811 108.623 8.76421C108.294 8.30467 107.671 8.00924 106.752 7.87794L104.684 7.58252C103.83 7.51687 103.403 7.1558 103.403 6.49931C103.403 5.97411 103.929 5.61303 104.979 5.41609C107.014 5.08784 108.557 4.56264 109.607 3.8405C110.723 3.11835 111.872 2.23208 113.054 1.18169C113.645 0.590846 114.137 0.295422 114.531 0.295422C115.122 0.295422 115.417 0.689319 115.417 1.47711V5.90846C115.417 6.4993 115.614 6.8932 116.008 7.09015C116.468 7.22145 116.96 7.0245 117.485 6.49931C120.111 4.00462 122.409 2.29773 124.378 1.37864C126.414 0.459545 128.547 0 130.779 0C133.733 0 136.097 1.05039 137.869 3.15118C139.642 5.18632 140.528 8.20619 140.528 12.2108V44.215C140.528 45.5936 140.725 46.5784 141.119 47.1692C141.579 47.6944 142.498 48.0555 143.876 48.2524L146.043 48.5478C146.765 48.6791 147.126 49.073 147.126 49.7295C147.126 50.4517 146.732 50.8127 145.944 50.8127H129.401C128.482 50.8127 128.022 50.4517 128.022 49.7295C128.022 49.073 128.383 48.6791 129.105 48.5478L130.484 48.3509C131.862 48.1539 132.749 47.76 133.143 47.1692C133.602 46.5784 133.832 45.5936 133.832 44.215V13.294C133.832 10.0772 133.241 7.8123 132.059 6.49931C130.878 5.18631 129.204 4.52982 127.037 4.52982C124.936 4.52982 123.033 5.15349 121.326 6.40083C119.684 7.58252 118.371 9.19094 117.387 11.2261C116.402 13.1956 115.91 15.3948 115.91 17.8239V44.215C115.91 45.5936 116.107 46.5784 116.5 47.1692C116.96 47.76 117.879 48.1211 119.258 48.2524L121.917 48.5478C122.639 48.6791 123 49.0402 123 49.6311C123 50.4188 122.507 50.8127 121.523 50.8127H104.881Z" fill="black"/>
+    <path d="M87.7106 6.8932C90.4022 2.29773 93.6519 0 97.4596 0C99.626 0 101.234 0.656495 102.285 1.96949C103.335 3.21683 103.86 4.62829 103.86 6.20388C103.86 7.45123 103.532 8.46879 102.876 9.25659C102.285 10.0444 101.333 10.4383 100.02 10.4383C98.9695 10.4383 98.1817 10.2085 97.6565 9.74896C97.197 9.22376 96.8031 8.63291 96.4748 7.97642C96.2122 7.31992 95.884 6.7619 95.4901 6.30236C95.0962 5.77716 94.4397 5.51456 93.5206 5.51456C92.3389 5.51456 91.2228 6.23671 90.1725 7.681C89.1221 9.05964 88.2358 10.9306 87.5137 13.294C86.8572 15.6574 86.5289 18.349 86.5289 21.3689V44.215C86.5289 45.5936 86.7259 46.5784 87.1198 47.1692C87.5793 47.76 88.4984 48.1211 89.877 48.2524L92.5358 48.5478C93.258 48.6791 93.6191 49.0402 93.6191 49.6311C93.6191 50.4188 93.1267 50.8127 92.1419 50.8127H75.4998C74.515 50.8127 74.0227 50.4517 74.0227 49.7295C74.0227 49.1387 74.4494 48.7448 75.3028 48.5478L76.4845 48.3509C77.8632 48.0883 78.7494 47.6944 79.1433 47.1692C79.6029 46.5784 79.8327 45.5936 79.8327 44.215V11.1276C79.8327 9.9459 79.6357 9.15811 79.2418 8.76421C78.9136 8.30467 78.2899 8.00924 77.3708 7.87794L75.3028 7.58252C74.4494 7.51687 74.0227 7.1558 74.0227 6.49931C74.0227 5.97411 74.5479 5.61303 75.5983 5.41609C77.6334 5.08784 79.1762 4.56264 80.2266 3.8405C81.3426 3.11835 82.4915 2.23208 83.6732 1.18169C84.264 0.590846 84.7564 0.295422 85.1503 0.295422C85.7411 0.295422 86.0365 0.689319 86.0365 1.47711V6.79472C86.0365 7.25427 86.2335 7.5497 86.6274 7.681C87.0213 7.74665 87.3823 7.48405 87.7106 6.8932Z" fill="black"/>
+    <path d="M44.5104 71C42.7378 71 41.3264 70.3763 40.276 69.129C39.2256 67.9473 38.7004 66.5687 38.7004 64.9931C38.7004 63.7457 39.0615 62.6953 39.7836 61.8419C40.5058 60.9884 41.4905 60.5617 42.7378 60.5617C43.7882 60.5617 44.5432 60.7915 45.0028 61.251C45.4623 61.7106 45.7906 62.2358 45.9875 62.8266C46.1844 63.4175 46.3814 63.9427 46.5783 64.4022C46.7753 64.8618 47.1692 65.0915 47.76 65.0915C48.4822 65.0915 49.1387 64.5663 49.7295 63.516C50.3204 62.5312 51.141 60.3976 52.1914 57.1151C52.8479 55.1456 53.2418 53.4387 53.3731 51.9945C53.57 50.5502 53.5372 49.0074 53.2746 47.3662C53.0777 45.7249 52.5853 43.7226 51.7975 41.3592L41.0638 7.18865C40.6042 5.61306 40.1447 4.59549 39.6851 4.13595C39.2912 3.6764 38.6348 3.34815 37.7157 3.15121L36.2385 2.85578C35.3851 2.65884 34.9584 2.23211 34.9584 1.57562C34.9584 0.919121 35.4179 0.590873 36.337 0.590873H52.5853C53.5044 0.590873 53.9639 0.919121 53.9639 1.57562C53.9639 2.29776 53.5372 2.72449 52.6838 2.85578L51.1082 3.05273C49.5326 3.24968 48.515 3.64358 48.0555 4.23442C47.6616 4.75962 47.6944 5.74436 48.1539 7.18865L56.8197 36.0416C57.0166 36.6981 57.312 37.0264 57.7059 37.0264C58.1655 37.0264 58.4937 36.6981 58.6907 36.0416L67.061 8.96119C67.5862 7.18865 67.7175 5.87566 67.4549 5.02222C67.2579 4.10312 66.3389 3.51228 64.6976 3.24968L62.6297 2.85578C61.7762 2.65884 61.3495 2.23211 61.3495 1.57562C61.3495 0.919121 61.809 0.590873 62.7281 0.590873H75.2344C76.1535 0.590873 76.613 0.951945 76.613 1.67409C76.613 2.33059 76.2191 2.79014 75.4313 3.05273L74.5451 3.34816C73.5603 3.6764 72.7397 4.26725 72.0832 5.12069C71.4267 5.97414 70.7374 7.45125 70.0152 9.55204L55.3426 55.3426C53.8983 59.9381 52.5853 63.3518 51.4036 65.5839C50.2875 67.816 49.2043 69.2603 48.1539 69.9168C47.1035 70.6389 45.889 71 44.5104 71Z" fill="black"/>
+    <path d="M20.4827 51.699C19.8918 51.699 19.4651 51.338 19.2025 50.6158L6.10541 7.18865C5.64586 5.61306 5.18631 4.5955 4.72677 4.13595C4.33287 3.6764 3.67637 3.34816 2.75728 3.15121L1.28017 2.85578C0.426722 2.65884 0 2.23211 0 1.57562C0 0.919121 0.459547 0.590873 1.37864 0.590873H17.6269C18.546 0.590873 19.0055 0.919121 19.0055 1.57562C19.0055 2.29776 18.5788 2.72449 17.7254 2.85578L16.1498 3.05273C14.5742 3.24968 13.5895 3.64358 13.1956 4.23442C12.8017 4.75962 12.8017 5.74436 13.1956 7.18865L21.3689 35.6477C21.5659 36.3699 21.8941 36.7309 22.3537 36.7309C22.8132 36.7309 23.1415 36.3699 23.3384 35.6477L31.3148 8.96119C31.84 7.18865 31.9713 5.87566 31.7087 5.02222C31.5118 4.10312 30.5927 3.51228 28.9514 3.24968L26.8835 2.85578C26.03 2.65884 25.6033 2.23211 25.6033 1.57562C25.6033 0.919121 26.0629 0.590873 26.982 0.590873H39.4882C40.4073 0.590873 40.8668 0.951945 40.8668 1.67409C40.8668 2.33059 40.4729 2.79014 39.6851 3.05273L38.7989 3.34816C37.8141 3.6764 36.9607 4.26725 36.2385 5.12069C35.5821 5.97414 34.9256 7.45125 34.2691 9.55204L21.7628 50.6158C21.5002 51.338 21.0735 51.699 20.4827 51.699Z" fill="black"/>
+  </svg>
+</div>
+
+<div id="stage">
+  <div id="models"></div>
+
+  <div id="navbar">
+    <button class="pill pill-icon" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <div class="pill pill-links">
+      <a href="#">New arrivals</a>
+      <a href="#">Women</a>
+      <a href="#">Men</a>
+      <a href="#">Bags</a>
+      <a href="#">Shows</a>
+    </div>
+    <button class="pill pill-icon" aria-label="Wishlist">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </button>
+    <button class="pill pill-icon" aria-label="Account">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+    <button class="pill pill-icon" aria-label="Cart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="panel-left" class="detail-panel">
+  <div class="product-name" id="detail-name"></div>
+  <div class="product-desc" id="detail-desc"></div>
+  <div class="more-details">More details</div>
+</div>
+
+<div id="panel-right" class="detail-panel">
+  <div class="wishlist">Add to wishlist</div>
+  <div class="size-row">
+    <span>34</span><span>36</span><span class="selected">38</span><span>40</span><span>42</span>
+  </div>
+  <div class="price" id="detail-price"></div>
+  <button class="add-to-cart">Add to cart</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var NAT_W = 1200, NAT_H = 2980;
+  var STAGE_W = 1440, STAGE_H = 900;
+
+  var CX = [-96.5, -1.0, 108.5, 263, 460.5, 694, 1013, 1422.5, 1832];
+  var BY = [506, 521, 554, 600, 662, 736, 831, 961, 1091];
+  var SC = [0.034167, 0.046667, 0.0675, 0.098333, 0.139167, 0.188333, 0.251667, 0.339167, 0.4572];
+
+  var PERIOD = 8, SLOT_MS = 3600;
+
+  var PRODUCTS = [
+    { name: "Sabbia Croc Set", desc: "Two-piece in croc-embossed leather — a sculpted long-sleeve top with a floor-grazing column skirt and matching boots.", price: "£2450" },
+    { name: "Balloon-Sleeve Leather Top", desc: "Nappa leather top with dramatic leg-of-mutton sleeves, worn with second-skin leggings and opera gloves.", price: "£1890" },
+    { name: "Dune Jersey Catsuit", desc: "Second-skin turtleneck catsuit in stretch jersey. Body-hugging silhouette with a hidden zip and extra-long sleeves.", price: "£1100" },
+    { name: "Onyx Leather Playsuit", desc: "Long-sleeve leather playsuit with peaked shoulders and a nipped waist, shown over sheer tights.", price: "£1650" },
+    { name: "Drape Halter Bodysuit", desc: "Halter bodysuit in fluid jersey with a gathered neckline, styled with leather opera gloves.", price: "£780" },
+    { name: "Corset Leather Playsuit", desc: "Boned leather playsuit with a sweetheart bustier and fine straps. Finished with knee-high boots.", price: "£1290" },
+    { name: "Cascade Fringe Gown", desc: "Floor-sweeping halter gown in liquid fringe. Bias-cut column silhouette that moves with every step.", price: "£3200" },
+    { name: "Vapor Silk Slip", desc: "Bias-cut silk slip dress with a whisper-fine strap and a fluid, liquid drape.", price: "£960" }
+  ];
+
+  var VIDEO_EXT = /\.(mp4|mov|webm|m4v)$/i;
+  var DISCOVERED_VIDEOS = []; // populated at build time if videos exist in project folder; none found here.
+
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var stage = document.getElementById("stage");
+  var logo = document.getElementById("logo");
+  var modelsContainer = document.getElementById("models");
+  var panelLeft = document.getElementById("panel-left");
+  var panelRight = document.getElementById("panel-right");
+  var detailName = document.getElementById("detail-name");
+  var detailDesc = document.getElementById("detail-desc");
+  var detailPrice = document.getElementById("detail-price");
+
+  var N = DISCOVERED_VIDEOS.length > 0 ? DISCOVERED_VIDEOS.length : 7;
+  var SPACING = PERIOD / N;
+
+  var models = [];
+  var coverScale = 1;
+  var prog = 0;
+  var lastTime = null;
+  var paused = false;
+  var selectedIndex = null;
+  var detailOpen = false;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function place(model, q) {
+    var i = Math.floor(q);
+    if (i >= PERIOD) i = PERIOD - 1;
+    if (i < 0) i = 0;
+    var f = q - i;
+    var s = lerp(SC[i], SC[i + 1], f);
+    var cx = lerp(CX[i], CX[i + 1], f);
+    var by = lerp(BY[i], BY[i + 1], f);
+    var x = cx - (NAT_W * s) / 2;
+    var y = by - (NAT_H * s);
+    model.el.style.transform = "translate3d(" + x + "px," + y + "px,0) scale(" + s + ")";
+    model.el.style.zIndex = String(Math.round(s * 10000));
+  }
+
+  function buildModels() {
+    for (var i = 0; i < N; i++) {
+      var el = document.createElement("div");
+      el.className = "model";
+      el.dataset.index = String(i);
+
+      var inner = document.createElement("div");
+      inner.className = "model-inner";
+
+      var videoFile = DISCOVERED_VIDEOS[i];
+      var mediaEl;
+      if (videoFile) {
+        mediaEl = document.createElement("video");
+        mediaEl.muted = true;
+        mediaEl.loop = true;
+        mediaEl.autoplay = true;
+        mediaEl.playsInline = true;
+        mediaEl.preload = "auto";
+        mediaEl.src = videoFile;
+        mediaEl.addEventListener("error", function () {
+          replaceWithFallback(this.closest(".model-inner"));
+        });
+      } else {
+        mediaEl = document.createElement("div");
+        mediaEl.className = "fallback-fill";
+      }
+      inner.appendChild(mediaEl);
+      el.appendChild(inner);
+
+      var product = PRODUCTS[i % PRODUCTS.length];
+
+      var model = {
+        el: el,
+        inner: inner,
+        media: mediaEl,
+        isVideo: !!videoFile,
+        index: i,
+        product: product,
+        slotOffset: i * SPACING
+      };
+
+      el.addEventListener("mouseenter", function (m) {
+        return function () { onHoverStart(m); };
+      }(model));
+      el.addEventListener("mouseleave", function (m) {
+        return function () { onHoverEnd(m); };
+      }(model));
+      el.addEventListener("click", function (m) {
+        return function () { openDetail(m); };
+      }(model));
+
+      modelsContainer.appendChild(el);
+      models.push(model);
+
+      if (model.isVideo) {
+        var dur = mediaEl.duration;
+        mediaEl.addEventListener("loadedmetadata", function (m) {
+          return function () {
+            try { this.currentTime = (m.index / N) * this.duration; } catch (e) {}
+          };
+        }(model));
+      }
+    }
+  }
+
+  function replaceWithFallback(innerEl) {
+    if (!innerEl || innerEl.querySelector(".fallback-fill")) return;
+    innerEl.innerHTML = "";
+    var fill = document.createElement("div");
+    fill.className = "fallback-fill";
+    innerEl.appendChild(fill);
+  }
+
+  function onHoverStart(model) {
+    if (detailOpen) return;
+    paused = true;
+    models.forEach(function (m) {
+      if (m === model) {
+        m.inner.style.opacity = "1";
+        if (m.isVideo && m.media.play) m.media.play();
+      } else {
+        m.inner.style.opacity = "0.7";
+        if (m.isVideo && m.media.pause) m.media.pause();
+      }
+    });
+  }
+
+  function onHoverEnd() {
+    if (detailOpen) return;
+    paused = false;
+    models.forEach(function (m) {
+      m.inner.style.opacity = "1";
+      if (m.isVideo && m.media.play) m.media.play();
+    });
+  }
+
+  function computeCoverScale() {
+    coverScale = Math.max(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+    stage.style.transform = "translateX(-50%) scale(" + coverScale + ")";
+    logo.style.transform = "scale(" + coverScale + ")";
+    if (detailOpen && selectedIndex !== null) {
+      applyDetailTransform(models[selectedIndex], false);
+    }
+  }
+
+  function detailTransformValues(el) {
+    var cs = coverScale, vw = window.innerWidth, vh = window.innerHeight;
+    var s = (vh * 0.9) / (NAT_H * cs);
+    var maxBoxW = vw - 2 * 300;
+    if (NAT_W * s * cs > maxBoxW) s = maxBoxW / (NAT_W * cs);
+    var mcy = 900 - vh / (2 * cs);
+    var x = 720 - (NAT_W * s) / 2;
+    var y = mcy - (NAT_H * s) / 2;
+    return { x: x, y: y, s: s };
+  }
+
+  function applyDetailTransform(model, animate) {
+    var t = detailTransformValues(model.el);
+    if (!animate) {
+      model.el.style.transition = "none";
+    } else {
+      model.el.style.transition = "transform 0.65s cubic-bezier(0.4, 0, 0.2, 1)";
+    }
+    model.el.style.transform = "translate3d(" + t.x + "px," + t.y + "px,0) scale(" + t.s + ")";
+    model.el.style.zIndex = "99999";
+    if (!animate) {
+      void model.el.offsetHeight;
+      model.el.style.transition = "";
+    }
+  }
+
+  function openDetail(model) {
+    if (detailOpen) return;
+    detailOpen = true;
+    paused = true;
+    selectedIndex = model.index;
+
+    models.forEach(function (m) {
+      if (m === model) return;
+      m.inner.style.opacity = "0";
+      if (m.isVideo && m.media.pause) m.media.pause();
+    });
+
+    model.inner.style.opacity = "1";
+    if (model.isVideo && model.media.play) model.media.play();
+
+    applyDetailTransform(model, true);
+
+    detailName.textContent = model.product.name;
+    detailDesc.textContent = model.product.desc;
+    detailPrice.textContent = model.product.price;
+
+    panelLeft.classList.add("visible");
+    panelRight.classList.add("visible");
+
+    history.pushState({ detail: true, index: model.index }, "");
+  }
+
+  function closeDetail() {
+    if (!detailOpen) return;
+    detailOpen = false;
+
+    var model = models[selectedIndex];
+    if (model) {
+      model.el.style.transition = "";
+      place(model, (model.slotOffset + prog) % PERIOD);
+    }
+
+    models.forEach(function (m) {
+      m.inner.style.opacity = "1";
+      if (m.isVideo && m.media.play) m.media.play();
+    });
+
+    panelLeft.classList.remove("visible");
+    panelRight.classList.remove("visible");
+
+    selectedIndex = null;
+    paused = false;
+  }
+
+  window.addEventListener("popstate", function () {
+    if (detailOpen) closeDetail();
+  });
+
+  window.addEventListener("resize", computeCoverScale);
+
+  function frame(now) {
+    if (lastTime === null) lastTime = now;
+    var dt = now - lastTime;
+    lastTime = now;
+    if (!paused && !reduceMotion) {
+      prog = (prog + dt / SLOT_MS) % PERIOD;
+      for (var i = 0; i < models.length; i++) {
+        if (detailOpen && i === selectedIndex) continue;
+        place(models[i], (models[i].slotOffset + prog) % PERIOD);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  buildModels();
+  computeCoverScale();
+
+  if (reduceMotion) {
+    models.forEach(function (m) {
+      place(m, m.slotOffset % PERIOD);
+    });
+  } else {
+    requestAnimationFrame(frame);
+  }
+})();
+</script>
+
+</body>
+</html>
