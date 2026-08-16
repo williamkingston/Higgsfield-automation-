@@ -13,20 +13,17 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+Python-based. `src/client.py` holds the single Higgsfield API client; `src/batch.py` and
+`scripts/run_batch.py` implement unlimited-generations batch video generation (submit many
+jobs at once, poll to completion, persist job IDs for restart recovery). Update this file as
+the codebase grows further.
 
 ## Development Setup
 
-Document the setup steps here once the project is initialised. Common patterns:
-
 ```bash
-# Python projects
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt   # or: pip install -e ".[dev]"
-
-# Node projects
-npm install
+pip install -r requirements-dev.txt
 
 # Copy and fill in environment variables
 cp .env.example .env
@@ -43,17 +40,20 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 
 ## Project Structure
 
-Update this section as directories are created:
-
 ```
 .
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── CLAUDE.md              # This file
+├── .env.example           # Environment variable template
+├── README.md              # User-facing documentation
+├── src/
+│   ├── client.py          # Single Higgsfield API client (all HTTP calls go through here)
+│   ├── batch.py           # BatchRunner: submit + poll batch video generation jobs
+│   └── storage.py         # JSON-backed job store for restart recovery
+├── scripts/
+│   └── run_batch.py       # CLI entry point for batch generation
+├── examples/
+│   └── prompts.example.json  # Example batch input
+└── tests/                 # pytest suite
 ```
 
 ## Key Conventions
@@ -85,14 +85,9 @@ Update this section as directories are created:
 
 ## Running Tests
 
-Document test commands here once a test framework is chosen:
-
 ```bash
-# Python (pytest)
+pip install -r requirements-dev.txt
 pytest
-
-# JavaScript/TypeScript
-npm test
 ```
 
 ## CI / CD
@@ -111,6 +106,11 @@ Key things to know when implementing against Higgsfield:
 - Video generation jobs are asynchronous — poll the job status endpoint until `status` is `completed` or `failed`.
 - Always check `job.status` before downloading output assets.
 - Store job IDs persistently so jobs can be recovered after a process restart.
+- **Unlimited generations**: our account tier has no per-account generation cap, so batch
+  code (`src/batch.py`, `scripts/run_batch.py`) submits every job in a batch up front instead
+  of throttling batch size to conserve quota. The API still enforces a per-request rate limit,
+  so `HiggsfieldClient` retries `429`s with exponential backoff — that backoff is still
+  required and must not be removed.
 
 ## Git Workflow
 
