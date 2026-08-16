@@ -16,7 +16,8 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
 offline test suite. On top of it sits an episodic video pipeline (`models.py`,
 `backends.py`, `pipeline.py`, `assemble.py`) that turns a YAML-defined series
-into per-scene generation jobs. Update this file as the codebase grows.
+into per-scene generation jobs, and `scripts/higgsfield_batch.py`, a standalone
+batch runner for a flat list of prompts. Update this file as the codebase grows.
 
 ## Development Setup
 
@@ -109,7 +110,8 @@ mode (`query_mode`, `set_mode`).
 ├── tests/                     # Test suite (offline, no API key needed)
 └── scripts/
     ├── generate_video.py      # Runnable example: submit one job and wait
-    └── generate_episode.py    # Generate a full episode from a series YAML
+    ├── generate_episode.py    # Generate a full episode from a series YAML
+    └── higgsfield_batch.py    # Batch-generate from a flat .txt/.csv of prompts
 ```
 
 All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
@@ -171,6 +173,11 @@ Key things to know when implementing against Higgsfield:
 - Video generation jobs are asynchronous — poll the job status endpoint until `status` is `completed` or `failed`.
 - Always check `job.status` before downloading output assets.
 - Store job IDs persistently so jobs can be recovered after a process restart.
+- **Unlimited generations**: our account tier has no per-account generation cap, so batch
+  code (`scripts/higgsfield_batch.py`, the episodic pipeline) submits every job in a run up
+  front instead of throttling batch size to conserve quota. The API still enforces a
+  per-request rate limit, so `HiggsfieldClient` retries `429`s with exponential backoff —
+  that backoff is still required and must not be removed.
 
 ## Git Workflow
 

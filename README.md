@@ -111,6 +111,23 @@ The backend shells out to LTX-Video's `inference.py`, mapping each scene's
 The rendered clip is moved into `output/<series>/<epNN>/`, so assembly and the
 rest of the pipeline work identically regardless of backend.
 
+## Batch-generate standalone prompts
+
+For a flat list of prompts that don't belong to a series, use
+`scripts/higgsfield_batch.py` instead of `generate_episode.py`. Our Higgsfield
+account tier has unlimited generations, so it submits every prompt as a job up
+front rather than throttling batch size to conserve quota — the client still
+backs off on `429`s to respect the API's per-request rate limit.
+
+```bash
+python scripts/higgsfield_batch.py prompts.txt
+python scripts/higgsfield_batch.py prompts.csv --output-dir clips --manifest results.json
+```
+
+Prompts come from a `.txt` file (one per line) or a `.csv` with a `prompt`
+column. Downloaded clips land in `--output-dir`; a JSON manifest of every
+prompt's job id, status, output URL, and clip path is written to `--manifest`.
+
 ## Tests
 
 ```bash
