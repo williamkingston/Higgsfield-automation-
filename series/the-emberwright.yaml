@@ -1,0 +1,90 @@
+# THE EMBERWRIGHT
+# A cinematic fantasy-myth series.
+#
+# Logline: The world's last sun is dying. Kess Vane, a young smith who can forge
+# fallen starlight into living fire, journeys across a freezing world to rekindle
+# it — before the final dark swallows everything.
+#
+# Backend: defaults to Higgsfield (set HIGGSFIELD_API_KEY). To render locally,
+# switch `backend` to `ltx` and run ./setup-ltx.sh (see series/example-series-ltx.yaml).
+
+title: "The Emberwright"
+
+backend: higgsfield
+
+style: >-
+  Epic painterly dark fantasy, cinematic anamorphic widescreen, volumetric
+  god-rays through mist, drifting ember particles, deep-blue frozen world cut by
+  molten-orange firelight, shallow depth of field, film grain, Studio-Ghibli-meets-
+  Frank-Frazetta atmosphere
+
+character_bible: >-
+  KESS VANE, a determined smith in her early twenties, warm brown skin dusted with
+  soot, copper-red hair tied back under a leather band, a scarred smithing apron,
+  and a single living ember always cradled in her cupped palm that lights her face
+  from below. Her companion is CINDER, a fox-sized creature made of cooling lava
+  and grey ash, its cracks glowing orange, leaving smoldering pawprints in the snow.
+
+aspect_ratio: "16:9"
+
+default_params:
+  fps: 24
+  seed: 1387
+
+episodes:
+  - number: 1
+    title: "The Falling Light"
+    synopsis: >-
+      On the longest night anyone can remember, Kess watches the dying sun crack
+      open and shed a single ember of a god. She climbs to claim it — and the
+      journey to relight the sky begins.
+    scenes:
+      - id: scene-01
+        prompt: >-
+          Sweeping establishing shot of a vast frozen valley at twilight, a pale
+          dying sun hanging low and flickering like a guttering candle, snow-laden
+          pines, a small stone forge village glowing with the only warm light for
+          miles
+        duration_seconds: 7
+        motion: slow aerial push-in
+
+      - id: scene-02
+        prompt: >-
+          Kess at her forge inside a stone workshop, hammer paused mid-strike, her
+          face lit from below by the living ember in her palm, looking up through a
+          frost-rimmed window with sudden alarm
+        duration_seconds: 5
+        motion: subtle handheld
+
+      - id: scene-03
+        prompt: >-
+          Dramatic wide shot of the dying sun cracking across its surface like
+          breaking glass, a single brilliant ember breaking free and arcing down
+          toward the mountains, trailing golden sparks across a darkening sky
+        duration_seconds: 6
+        motion: tracking the falling ember
+
+      - id: scene-04
+        prompt: >-
+          Kess trudging up a steep snow-covered ridge into rising wind, cloak
+          whipping, Cinder the lava-fox bounding ahead leaving glowing pawprints,
+          the horizon ahead pulsing with the fallen ember's distant orange light
+        duration_seconds: 6
+        motion: side tracking shot
+
+      - id: scene-05
+        prompt: >-
+          Close-up of Kess kneeling at a small crater in the snow, reaching toward
+          a molten god-ember the size of a heart, its light reflected in her wide
+          eyes, steam and snowflakes swirling around her outstretched hand
+        duration_seconds: 6
+        motion: slow push-in
+
+      - id: scene-06
+        prompt: >-
+          Heroic low-angle shot of Kess standing at the ridge crest at full night,
+          holding the captured god-ember aloft as it blazes like a tiny sun,
+          Cinder at her side, the dark frozen world stretching to the horizon
+          behind her
+        duration_seconds: 7
+        motion: rising crane shot
