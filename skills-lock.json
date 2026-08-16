@@ -6,6 +6,13 @@
       "sourceType": "github",
       "skillPath": "skills/emil-design-eng/SKILL.md",
       "computedHash": "8bdf9e4e6de7a4969147bf4828a4ad2c5aacd9fba4b690b250a85e0467ca387d"
+    },
+    "seedance-25": {
+      "source": "sjinn-ai/seedance2.5-skills",
+      "sourceType": "github",
+      "skillPath": "seedance-25/SKILL.md",
+      "sourceCommit": "6db1b37e51b3d64ead12722faf5d71f0666d3f93",
+      "computedHash": "30b4dd838e8b55eeaec65ffa36a14f1341474b193e8f98f65cf0128eb8cd91da"
     }
   }
 }
