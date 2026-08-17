@@ -54,6 +54,7 @@ Update this section as directories are created:
 ├── tests/               # Test suite
 ├── scripts/             # One-off or utility scripts
 └── docs/                # Additional documentation
+    └── guides/          # Step-by-step workflow guides
 ```
 
 ## Key Conventions
