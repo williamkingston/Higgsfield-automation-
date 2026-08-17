@@ -107,9 +107,11 @@ mode (`query_mode`, `set_mode`).
 │   └── assemble.py            # ffmpeg concat of an episode's clips
 ├── series/                    # Example series definitions (YAML)
 ├── tests/                     # Test suite (offline, no API key needed)
-└── scripts/
-    ├── generate_video.py      # Runnable example: submit one job and wait
-    └── generate_episode.py    # Generate a full episode from a series YAML
+├── scripts/
+│   ├── generate_video.py      # Runnable example: submit one job and wait
+│   └── generate_episode.py    # Generate a full episode from a series YAML
+└── docs/                      # Additional documentation
+    └── guides/                # Step-by-step workflow guides
 ```
 
 All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
