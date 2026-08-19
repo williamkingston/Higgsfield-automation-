@@ -16,7 +16,10 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
 offline test suite. On top of it sits an episodic video pipeline (`models.py`,
 `backends.py`, `pipeline.py`, `assemble.py`) that turns a YAML-defined series
-into per-scene generation jobs. Update this file as the codebase grows.
+into per-scene generation jobs. Alongside it, `src/templates/` holds
+parametrized prompt templates for one-off shoots — starting with a 4-shot
+"Silhouette Reveal" fashion-film template — rendered and submitted via
+`scripts/generate_fashion_film.py`. Update this file as the codebase grows.
 
 ## Development Setup
 
@@ -105,11 +108,14 @@ mode (`query_mode`, `set_mode`).
 │   ├── backends.py            # Higgsfield (API) and LTX-Video (local) backends
 │   ├── pipeline.py            # EpisodePipeline — generate + persist + assemble
 │   └── assemble.py            # ffmpeg concat of an episode's clips
+├── src/templates/              # Parametrized prompt templates for one-off shoots
+│   └── fashion_film_silhouette_reveal.py  # 4-shot "Silhouette Reveal" fashion-film template
 ├── series/                    # Example series definitions (YAML)
 ├── tests/                     # Test suite (offline, no API key needed)
 └── scripts/
     ├── generate_video.py      # Runnable example: submit one job and wait
-    └── generate_episode.py    # Generate a full episode from a series YAML
+    ├── generate_episode.py    # Generate a full episode from a series YAML
+    └── generate_fashion_film.py  # Render (and optionally submit) a Silhouette Reveal fashion film
 ```
 
 All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):

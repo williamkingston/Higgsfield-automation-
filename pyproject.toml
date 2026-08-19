@@ -29,6 +29,11 @@ extend-exclude = [".agents"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+# Prompt template bodies are one section per line by design; wrapping them
+# would change the rendered prompt text sent to the API.
+"src/templates/fashion_film_silhouette_reveal.py" = ["E501"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "tests"]
