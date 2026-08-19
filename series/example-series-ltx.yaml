@@ -1,0 +1,49 @@
+# Same show as example-series.yaml, configured for the local LTX-Video backend.
+# Run ./setup-ltx.sh first, then either export LTX_VIDEO_DIR or set repo_dir below.
+
+title: "The Lighthouse Keeper"
+
+backend: ltx
+backend_options:
+  # repo_dir: vendor/LTX-Video           # or rely on the LTX_VIDEO_DIR env var
+  pipeline_config: configs/ltxv-13b-0.9.7-dev.yaml
+  # python_bin: vendor/LTX-Video/.venv/bin/python   # to skip activating the venv
+
+style: >-
+  Cinematic, moody coastal atmosphere, volumetric fog, golden-hour lighting,
+  35mm film grain, shallow depth of field
+
+character_bible: >-
+  MARA, a weathered lighthouse keeper in her 60s with silver braided hair and a
+  navy wool coat; her companion is a one-eyed grey cat named PILOT
+
+aspect_ratio: "16:9"
+
+default_params:
+  fps: 24
+  seed: 42
+
+episodes:
+  - number: 1
+    title: "The Last Light"
+    synopsis: >-
+      A storm rolls in and Mara discovers the lighthouse lamp has gone dark for
+      the first time in forty years.
+    scenes:
+      - id: scene-01
+        prompt: >-
+          Wide establishing shot of a lone lighthouse on a rocky cliff at dusk,
+          waves crashing below, storm clouds gathering on the horizon
+        duration_seconds: 5
+
+      - id: scene-02
+        prompt: >-
+          Mara stands at the lighthouse window watching the storm, worry on her
+          face, lamplight flickering behind her
+        duration_seconds: 5
+
+      - id: scene-03
+        prompt: >-
+          Close-up of the lighthouse lamp sputtering and going dark, Pilot the
+          cat watching from a windowsill
+        duration_seconds: 5

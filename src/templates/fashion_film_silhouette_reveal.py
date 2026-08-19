@@ -49,7 +49,7 @@ def _reference_block(subject: FilmSubject) -> str:
 def _worn_clause(subject: FilmSubject) -> str:
     items = [subject.garment, *subject.accessories]
     tags = [_tag(i) for i in range(2, len(items) + 2)]
-    parts = [f"{tag} ({item.role})" for tag, item in zip(tags, items)]
+    parts = [f"{tag} ({item.role})" for tag, item in zip(tags, items, strict=True)]
     if len(parts) == 1:
         return f"wearing {parts[0]}"
     return "wearing " + ", ".join(parts[:-1]) + f", and {parts[-1]}"

@@ -1,6 +1,6 @@
 import re
 
-from src.templates.fashion_film_silhouette_reveal import (
+from templates.fashion_film_silhouette_reveal import (
     FilmSubject,
     Reference,
     render_all_shots,
@@ -10,7 +10,9 @@ from src.templates.fashion_film_silhouette_reveal import (
 def make_subject(num_accessories: int = 1) -> FilmSubject:
     return FilmSubject(
         subject=Reference(role="male model", description="male model"),
-        garment=Reference(role="gray distressed hooded jacket", description="gray distressed hooded jacket"),
+        garment=Reference(
+            role="gray distressed hooded jacket", description="gray distressed hooded jacket"
+        ),
         accessories=[
             Reference(role=f"accessory {i}", description=f"accessory {i}")
             for i in range(1, num_accessories + 1)

@@ -1,0 +1,40 @@
+[project]
+name = "higgsfield-automation"
+version = "0.1.0"
+description = "Automation workflows for the Higgsfield AI video generation platform"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+# Vendored agent skills are third-party and not linted as project code.
+extend-exclude = [".agents"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Prompt template bodies are one section per line by design; wrapping them
+# would change the rendered prompt text sent to the API.
+"src/templates/fashion_film_silhouette_reveal.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = "-q"
