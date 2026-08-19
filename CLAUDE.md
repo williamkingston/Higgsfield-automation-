@@ -13,7 +13,10 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+Bootstrapped with a first automation: a parametrized "Silhouette Reveal" 4-shot fashion-film
+prompt template (`src/templates/fashion_film_silhouette_reveal.py`), a minimal Higgsfield API
+client (`src/client.py`), and a CLI to render/submit it (`scripts/generate_fashion_film.py`).
+Update this file as the codebase grows further.
 
 ## Development Setup
 
@@ -47,13 +50,18 @@ Update this section as directories are created:
 
 ```
 .
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-└── docs/                # Additional documentation
+├── CLAUDE.md                    # This file
+├── .env.example                 # Environment variable template
+├── requirements.txt             # Python dependencies
+├── README.md                    # User-facing documentation
+├── src/
+│   ├── client.py                 # Single Higgsfield API client (bearer auth, backoff)
+│   └── templates/
+│       └── fashion_film_silhouette_reveal.py  # Parametrized 4-shot fashion-film prompt template
+├── scripts/
+│   └── generate_fashion_film.py  # CLI: render (and optionally submit) a fashion film
+├── tests/                        # Test suite
+└── docs/                         # Additional documentation
 ```
 
 ## Key Conventions
