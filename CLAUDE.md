@@ -106,6 +106,7 @@ mode (`query_mode`, `set_mode`).
 │   ├── pipeline.py            # EpisodePipeline — generate + persist + assemble
 │   └── assemble.py            # ffmpeg concat of an episode's clips
 ├── series/                    # Example series definitions (YAML)
+├── presets/                   # Catalogs of Higgsfield preset/prompt codes (e.g. fashion-product-reveal-codes.json)
 ├── tests/                     # Test suite (offline, no API key needed)
 └── scripts/
     ├── generate_video.py      # Runnable example: submit one job and wait
