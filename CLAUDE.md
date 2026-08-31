@@ -13,24 +13,45 @@ This repository automates workflows with the [Higgsfield AI](https://higgsfield.
 
 ## Repository Status
 
-This repository is new and currently empty. Update this file as the codebase grows.
+The core `HiggsfieldClient` foundation is in place (`src/higgsfield/`), with an
+offline test suite. On top of it sits an episodic video pipeline (`models.py`,
+`backends.py`, `pipeline.py`, `assemble.py`) that turns a YAML-defined series
+into per-scene generation jobs. Update this file as the codebase grows.
 
 ## Development Setup
 
-Document the setup steps here once the project is initialised. Common patterns:
+This project uses [uv](https://docs.astral.sh/uv/) to manage the Python
+environment and dependencies. The fastest path is the bootstrap script, which
+installs uv (if missing), syncs the environment, and scaffolds `.env`:
 
 ```bash
-# Python projects
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt   # or: pip install -e ".[dev]"
+./setup.sh
+```
 
-# Node projects
-npm install
+To do it manually:
+
+```bash
+# Install uv (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create .venv and install all deps (incl. dev) from pyproject.toml / uv.lock
+uv sync --extra dev
 
 # Copy and fill in environment variables
-cp .env.example .env
+cp .env.example .env   # then set HIGGSFIELD_API_KEY
 ```
+
+Run commands inside the environment with `uv run` (no manual activation needed):
+
+```bash
+uv run pytest          # tests
+uv run ruff check .    # lint
+uv run ruff format .   # format
+```
+
+Dependencies are declared in `pyproject.toml` and pinned in `uv.lock` (committed
+for reproducible installs). Add a runtime dependency with `uv add <pkg>` and a
+dev-only one with `uv add --dev <pkg>`.
 
 ## Environment Variables
 
@@ -40,22 +61,63 @@ Add required variables to `.env.example` (never commit real secrets). Expected k
 |---|---|
 | `HIGGSFIELD_API_KEY` | Higgsfield API key for authenticated requests |
 | `HIGGSFIELD_API_BASE` | API base URL (default: `https://api.higgsfield.ai`) |
+| `LOVART_ACCESS_KEY` | Lovart access key (`ak_...`); identifies the account |
+| `LOVART_SECRET_KEY` | Lovart secret key (`sk_...`); used to HMAC-sign requests, sensitive, never log or commit |
+| `LOVART_API_BASE` | Lovart API base URL (default: `https://lgw.lovart.ai`) |
+| `LOVART_API_PREFIX` | Lovart OpenAPI path prefix (default: `/v1/openapi`) |
+
+### Lovart client
+
+All Lovart calls go through `src/lovart/` (`LovartClient`). It loads credentials
+via `LovartConfig.from_env()` and **HMAC-SHA256-signs every request**: the
+signature is computed over `"{METHOD}\n{PATH}\n{TIMESTAMP}"` keyed by the secret
+key and sent with the access key, timestamp, and signed method/path as headers
+(`X-Access-Key`, `X-Timestamp`, `X-Signature`, `X-Signed-Method`,
+`X-Signed-Path`). All signing lives in `LovartClient._signed_headers`. The client
+retries on `429`/`5xx` with exponential backoff (honoring `Retry-After`).
+
+Generation is a chat-thread flow: `chat(prompt, project_id)` returns a
+`thread_id`, `get_status` reports `running`/`done`/`abort`, and `get_result`
+returns artifacts. `generate()` ties these together (submit → poll → result,
+with optional `auto_confirm` for high-cost operations). Other methods cover
+projects (`create_project`, `rename_project`, `validate_project`) and billing
+mode (`query_mode`, `set_mode`).
+
+- `scripts/lovart_generate.py` — single-prompt example.
+- `scripts/lovart_batch.py` — batch-generate from a `.txt`/`.csv` of prompts,
+  writing a JSON manifest of results.
 
 ## Project Structure
 
-Update this section as directories are created:
-
 ```
 .
-├── CLAUDE.md            # This file
-├── .env.example         # Environment variable template
-├── README.md            # User-facing documentation
-├── src/                 # Main source code
-├── tests/               # Test suite
-├── scripts/             # One-off or utility scripts
-├── presets/             # Catalogs of Higgsfield preset/prompt codes (e.g. fashion-product-reveal-codes.json)
-└── docs/                # Additional documentation
+├── CLAUDE.md                  # This file
+├── pyproject.toml             # Project metadata & dependencies (uv-managed)
+├── uv.lock                    # Pinned dependency versions (committed)
+├── .python-version            # Python version pin for uv
+├── setup.sh                   # Bootstrap script (installs uv + syncs env)
+├── .env.example               # Environment variable template
+├── src/higgsfield/            # The Higgsfield package
+│   ├── client.py              # HiggsfieldClient — the single API entry point
+│   ├── config.py              # HiggsfieldConfig.from_env() + resolve_output_dir()
+│   ├── errors.py              # Typed exceptions
+│   ├── models.py              # Series / Episode / Scene (YAML-loaded)
+│   ├── backends.py            # Higgsfield (API) and LTX-Video (local) backends
+│   ├── pipeline.py            # EpisodePipeline — generate + persist + assemble
+│   └── assemble.py            # ffmpeg concat of an episode's clips
+├── series/                    # Example series definitions (YAML)
+├── presets/                   # Catalogs of Higgsfield preset/prompt codes (e.g. fashion-product-reveal-codes.json)
+├── tests/                     # Test suite (offline, no API key needed)
+└── scripts/
+    ├── generate_video.py      # Runnable example: submit one job and wait
+    └── generate_episode.py    # Generate a full episode from a series YAML
 ```
+
+All API access goes through `HiggsfieldClient` (`src/higgsfield/client.py`):
+bearer auth, exponential backoff on `429`/`5xx` (honoring `Retry-After`),
+request-id logging, and the submit-then-poll job pattern via
+`create_generation` → `wait_for_job` (or the combined `generate_and_wait`). The
+episodic pipeline builds on this client through the `HiggsfieldBackend`.
 
 ## Key Conventions
 
@@ -86,23 +148,21 @@ Update this section as directories are created:
 
 ## Running Tests
 
-Document test commands here once a test framework is chosen:
+Tests run under pytest, inside the uv-managed environment:
 
 ```bash
-# Python (pytest)
-pytest
-
-# JavaScript/TypeScript
-npm test
+uv run pytest
 ```
+
+Tests run fully offline — the HTTP session is faked, so no API key or network
+access is required.
 
 ## CI / CD
 
-Document the CI pipeline here once configured. Common things to capture:
-
-- Which checks must pass before merge (lint, type check, tests)
-- How deployments are triggered
-- Branch protection rules
+GitHub Actions runs on every push to `main` and on every pull request
+(`.github/workflows/ci.yml`): it syncs the uv environment (`uv sync --extra
+dev`), lints with `uv run ruff check .`, and runs `uv run pytest`. Both lint and
+tests must pass before merge.
 
 ## Working with the Higgsfield API
 
