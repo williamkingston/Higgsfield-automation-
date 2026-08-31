@@ -53,6 +53,7 @@ Update this section as directories are created:
 ├── src/                 # Main source code
 ├── tests/               # Test suite
 ├── scripts/             # One-off or utility scripts
+├── presets/             # Catalogs of Higgsfield preset/prompt codes (e.g. fashion-product-reveal-codes.json)
 └── docs/                # Additional documentation
 ```
 
